@@ -43,8 +43,12 @@ apply_kitty() {
     sed -i "s/${colorlist[$i]} #/${colorvalues[$i]#\#}/g" "$STATE_DIR"/user/generated/terminal/kitty-theme.conf
   done
 
-  # Reload
-  pkill -SIGUSR1 -x kitty 2>/dev/null || true
+  # Reload colors via socket if available to preserve user font zoom/scaling
+  if command -v kitten &>/dev/null; then
+    kitten @ --to unix:@kitty set-colors --all --configured "$STATE_DIR"/user/generated/terminal/kitty-theme.conf 2>/dev/null || pkill -SIGUSR1 -x kitty 2>/dev/null || true
+  else
+    pkill -SIGUSR1 -x kitty 2>/dev/null || true
+  fi
 }
 
 apply_anyterm() {
