@@ -24,30 +24,7 @@ ContentPage {
     }
 
     function runUpdateDots() {
-        const updateScript = `
-            set -e
-            DIR="$HOME/.config/quickshell"
-
-            # Download to temp first
-            rm -rf "$DIR/end4-pC-tmp"
-            git clone https://github.com/pctrade/end4-pC.git "$DIR/end4-pC-tmp"
-
-            # Apply update
-            rm -rf "$DIR/end4-pC-old"
-            [ -d "$DIR/end4-pC" ] && mv "$DIR/end4-pC" "$DIR/end4-pC-old"
-            mv "$DIR/end4-pC-tmp" "$DIR/end4-pC"
-
-            # Reload
-            killall qs 2>/dev/null || true
-            sleep 0.5
-            setsid qs -c end4-pC >/tmp/qs.log 2>&1 < /dev/null &
-            disown
-
-            # Cleanup
-            rm -rf "$DIR/end4-pC-old"
-        `
-
-        Quickshell.execDetached(["kitty", "--hold", "bash", "-c", updateScript])
+        Quickshell.execDetached(["notify-send", "Update Dots", "Disabled to preserve custom configuration.", "-a", "Settings"])
         Qt.callLater(() => GlobalStates.settingsOpen = false)
     }
 
@@ -136,6 +113,7 @@ ContentPage {
             RowLayout {
                 Layout.alignment: Qt.AlignBottom | Qt.AlignRight
                 spacing: 8
+                visible: false
                 RippleButton {
                     buttonText: Translation.tr("Update Dots")
                     buttonRadius: Appearance.rounding.full
