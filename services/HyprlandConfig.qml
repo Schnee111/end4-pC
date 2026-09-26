@@ -11,10 +11,10 @@ Singleton {
     id: root
     signal reloaded()
 
-    readonly property string configuratorScriptPath: Quickshell.shellPath("scripts/hyprland/hyprconfigurator.py")
+    readonly property string configuratorScriptPath: FileUtils.trimFileProtocol(Quickshell.shellPath("scripts/hyprland/hyprconfigurator.py"))
     readonly property string shellOverridesPath: FileUtils.trimFileProtocol(`${Directories.config}/hypr/hyprland/shellOverrides/main.lua`)
     readonly property string animOverridesPath: FileUtils.trimFileProtocol(`${Directories.config}/hypr/hyprland/shellOverrides/animations.lua`)
-    readonly property string idleConfiguratorScriptPath: Quickshell.shellPath("scripts/hyprland/hypridleconfigurator.py")
+    readonly property string idleConfiguratorScriptPath: FileUtils.trimFileProtocol(Quickshell.shellPath("scripts/hyprland/hypridleconfigurator.py"))
     readonly property string hypridlePath: FileUtils.trimFileProtocol(`${Directories.config}/hypr/hypridle.conf`)
 
     function setIdle(lock: int, screenOff: int, suspend: int) {
