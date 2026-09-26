@@ -13,7 +13,17 @@ Scope {
 
     PanelWindow {
         id: root
-        visible: (Notifications.popupList.length > 0) && !GlobalStates.screenLocked && !GlobalStates.dynamicIslandEnabled
+        property var activeMonData: HyprlandData.monitors.find(m => m.name === (screen?.name ?? ""))
+        property bool isFullscreenActive: {
+            if (activeMonData?.hasfullscreen) return true;
+            const focusedId = activeMonData?.activeWorkspace?.id;
+            if (focusedId) {
+                const clients = HyprlandData.hyprlandClientsForWorkspace(focusedId);
+                if (clients && clients.some(c => c.fullscreen > 0)) return true;
+            }
+            return false;
+        }
+        visible: (Notifications.popupList.length > 0) && !GlobalStates.screenLocked && !GlobalStates.dynamicIslandEnabled && !isFullscreenActive
         screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? null
 
         property string position: {
