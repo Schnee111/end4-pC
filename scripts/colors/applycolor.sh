@@ -61,15 +61,11 @@ apply_anyterm() {
     sed -i "s/${colorlist[$i]} #/${colorvalues[$i]#\#}/g" "$STATE_DIR"/user/generated/terminal/sequences.txt
   done
 
-  sed -i "s/\$alpha/$term_alpha/g" "$STATE_DIR/user/generated/terminal/sequences.txt"
+  sed -i "s/\$alpha/$term_alpha/g" "$STATE_DIR"/user/generated/terminal/sequences.txt
 
-  for file in /dev/pts/*; do
-    if [[ $file =~ ^/dev/pts/[0-9]+$ ]]; then
-      {
-      cat "$STATE_DIR"/user/generated/terminal/sequences.txt >"$file"
-      } & disown || true
-    fi
-  done
+  # Note: Broadcasting raw escape sequences to all /dev/pts/* is disabled
+  # because it corrupts libadwaita terminals (Ptyxis/Prompt) contrast and
+  # triggered the KDE kwrited notification bug. Kitty uses apply_kitty directly.
 }
 
 apply_term() {
