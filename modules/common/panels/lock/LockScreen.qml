@@ -43,6 +43,10 @@ Scope {
         })
     }
 
+    function runPostUnlockAutostart() {
+        Quickshell.execDetached(["bash", "-c", "test -x ~/.config/hypr/scripts/autostart.sh && ~/.config/hypr/scripts/autostart.sh"]);
+    }
+
     // This stores all the information shared between the lock surfaces on each screen.
     // https://github.com/quickshell-mirror/quickshell-examples/tree/master/lockscreen
     LockContext {
@@ -70,6 +74,9 @@ Scope {
 
             // Unlock the keyring if configured to do so
             if (Config.options.lock.security.unlockKeyring) root.unlockKeyring(); // Async
+
+            // Trigger autostart after session unlock
+            root.runPostUnlockAutostart();
 
             // Unlock the screen before exiting, or the compositor will display a
             // fallback lock you can't interact with.
@@ -140,6 +147,7 @@ Scope {
         } else {
             KeyringStorage.fetchKeyringData();
             GlobalStates.startupLockPending = false;
+            root.runPostUnlockAutostart();
         }
     }
     Connections {
