@@ -140,13 +140,13 @@ Singleton {
             if (["openlayer", "closelayer", "screencast", "submap", "activelayout"].includes(name)) return;
 
             if (name.startsWith("workspace") || name.startsWith("createworkspace") || name.startsWith("destroyworkspace") || name.startsWith("moveworkspace") || name === "renameworkspace") {
-                root.queueUpdate(false, true, false, false);
+                root.queueUpdate(false, true, true, false);
             } else if (name.startsWith("activespecial")) {
                 root.queueUpdate(false, true, true, false);
             } else if (name.startsWith("openwindow") || name.startsWith("closewindow") || name.startsWith("movewindow")) {
                 root.queueUpdate(true, true, false, false);
             } else if (name.startsWith("window") || name.startsWith("activewindow") || name === "fullscreen" || name === "changefloatingmode" || name === "pin" || name === "urgent" || name === "minimize") {
-                root.queueUpdate(true, false, false, false);
+                root.queueUpdate(true, false, true, false);
             } else if (name.startsWith("monitor") || name === "focusedmon") {
                 root.queueUpdate(false, true, true, false);
             } else {
