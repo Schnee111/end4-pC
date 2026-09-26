@@ -42,7 +42,7 @@ apply_kitty() {
   done
 
   # Reload
-  kill -SIGUSR1 $(pidof kitty)
+  pkill -SIGUSR1 -x kitty 2>/dev/null || true
 }
 
 apply_anyterm() {
