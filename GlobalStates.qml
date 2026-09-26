@@ -139,4 +139,13 @@ Singleton {
             Config.options.background.centeredWallpaper = !Config.options.background.centeredWallpaper
         }
     }
+
+    CompositorGlobalShortcut {
+        name: "toggleLightDark"
+        description: "Toggles light/dark mode"
+        onPressed: {
+            const mode = Appearance.m3colors.darkmode ? "light" : "dark";
+            Quickshell.execDetached(["bash", "-c", `${Directories.wallpaperSwitchScriptPath} --mode ${mode} --noswitch`]);
+        }
+    }
 }
