@@ -47,8 +47,9 @@ Item { // Window
         const wsId = windowData.workspace?.id;
         if (!wsId) return 0;
         let count = 0;
-        for (const addr of root.windowAddresses) {
-            const w = root.windowByAddress[addr];
+        const addrs = HyprlandData.addresses ?? [];
+        for (const addr of addrs) {
+            const w = HyprlandData.windowByAddress?.[addr];
             if (w && w.workspace?.id === wsId && !w.floating && !w.fullscreen) count++;
         }
         return count;
