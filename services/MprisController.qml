@@ -42,6 +42,11 @@ Singleton {
 		p => p.dbusName?.startsWith('org.mpris.MediaPlayer2.plasma-browser-integration')
 	)
 	function isRealPlayer(player) {
+        if (!player) return false;
+        // Ignore ghost/idle players with no track title that are not playing (e.g. idle Chrome tabs)
+        if (!player.isPlaying && (!player.trackTitle || player.trackTitle.trim().length === 0)) {
+            return false;
+        }
         if (!Config.options.media.filterDuplicatePlayers) {
             return true;
         }

@@ -50,6 +50,10 @@ Scope {
 
     function filterDuplicatePlayers(players) {
         if (!players) return [];
+        // Filter out idle ghost players with no track title that are not playing (e.g. idle browser instances)
+        players = players.filter(p => p.isPlaying || ((p.trackTitle ?? "").trim().length > 0));
+        if (players.length === 0) return [];
+
         let filtered = [];
         let used = new Set();
 
