@@ -28,12 +28,17 @@ MaterialShape { // App icon
     shape: isUrgent ? urgentShapes[Math.floor(Math.random() * urgentShapes.length)] : MaterialShape.Shape.Circle
 
     color: isUrgent ? Appearance.colors.colPrimaryContainer : Appearance.colors.colSecondaryContainer
+    readonly property bool hasSystemIcon: root.appIcon != "" && Quickshell.iconPath(root.appIcon, "") !== ""
+
     Loader {
         id: materialSymbolLoader
-        active: root.appIcon == ""
+        active: !root.hasSystemIcon && root.image == ""
         anchors.fill: parent
         sourceComponent: MaterialSymbol {
             text: {
+                if (root.appIcon && !root.hasSystemIcon) {
+                    return root.appIcon;
+                }
                 const defaultIcon = NotificationUtils.findSuitableMaterialSymbol("")
                 const guessedIcon = NotificationUtils.findSuitableMaterialSymbol(root.summary)
                 return (root.urgency == NotificationUrgency.Critical && guessedIcon === defaultIcon) ?
@@ -48,7 +53,7 @@ MaterialShape { // App icon
     }
     Loader {
         id: appIconLoader
-        active: root.image == "" && root.appIcon != ""
+        active: root.image == "" && root.hasSystemIcon
         anchors.centerIn: parent
         sourceComponent: IconImage {
             id: appIconImage
