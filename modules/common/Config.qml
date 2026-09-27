@@ -610,7 +610,7 @@ Singleton {
                     property real flingFriction: 0.002
                     property real flingStopThreshold: 0.01
                     // Sensitivity: pixels per angleDelta unit during finger-follow phase
-                    property real touchpadSensitivity: 3.5
+                    property real touchpadSensitivity: 1.0
                     // Velocity reflection coefficient at bounds (0 = hard stop, 1 = perfect bounce)
                     property real bounceDamping: 0.3
 

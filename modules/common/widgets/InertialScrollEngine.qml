@@ -31,7 +31,7 @@ Item {
     property real flingFriction: Config?.options?.interactions?.scrolling?.flingFriction ?? 0.002
     property real flingStopThreshold: Config?.options?.interactions?.scrolling?.flingStopThreshold ?? 0.01
     property real flingMinVelocity: 0.15 // px/ms threshold to launch fling
-    property real touchpadSensitivity: (Config?.options?.interactions?.scrolling?.touchpadSensitivity ?? 3.5)
+    property real touchpadSensitivity: (Config?.options?.interactions?.scrolling?.touchpadSensitivity ?? 1.0)
                                        * _cfgTouchpadFactor
     property real bounceDamping: Config?.options?.interactions?.scrolling?.bounceDamping ?? 0.3
 
