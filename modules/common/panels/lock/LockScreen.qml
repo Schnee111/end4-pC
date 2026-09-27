@@ -43,7 +43,11 @@ Scope {
         })
     }
 
+    property bool autostartExecuted: false
+
     function runPostUnlockAutostart() {
+        if (root.autostartExecuted) return;
+        root.autostartExecuted = true;
         Quickshell.execDetached(["bash", "-c", "test -x ~/.config/hypr/scripts/autostart.sh && ~/.config/hypr/scripts/autostart.sh"]);
     }
 
