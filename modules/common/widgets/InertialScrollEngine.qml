@@ -6,39 +6,48 @@ import qs.modules.common
  *
  * ARCHITECTURE: This item is placed INSIDE the Flickable (as a child).
  * It does NOT handle events itself — instead, it exposes handleWheel()
- * which is called by a WheelHandler dynamically created on the Flickable's
- * parent (an ancestor). Ancestor WheelHandlers intercept events BEFORE
- * the Flickable's C++ wheelEvent handler in Qt 6.
+ * which is called by a WheelHandler or MouseArea on the Flickable or its parent.
  *
  * Implements two scrolling paths:
- * 1. TOUCHPAD: Direct delta tracking + exponential decay fling after lift.
- * 2. MOUSE WHEEL: Animated target using an OutCubic curve.
+ * 1. TOUCHPAD: Direct 1:1 finger tracking + natural kinetic fling after lift + bounds spring.
+ * 2. MOUSE WHEEL: Smooth animated target stepping using OutCubic bezier easing.
  */
 Item {
     id: root
 
     required property var flickable
 
+    // === Config helpers (with defensive normalization for legacy config values) ===
+    readonly property real _cfgTouchpadFactor: {
+        var f = Config?.options?.interactions?.scrolling?.touchpadScrollFactor ?? 1.0
+        return (f > 10) ? 1.0 : f // Normalize legacy values (e.g. 200) to 1.0
+    }
+    readonly property real _cfgMouseFactor: {
+        var f = Config?.options?.interactions?.scrolling?.mouseScrollFactor ?? 1.0
+        return (f > 10) ? 1.0 : f // Normalize legacy values (e.g. 120) to 1.0
+    }
+
     // === Touchpad physics ===
-    property real flingFriction: Config?.options.interactions.scrolling.flingFriction ?? 0.002
-    property real flingStopThreshold: Config?.options.interactions.scrolling.flingStopThreshold ?? 0.01
-    readonly property real flingMinVelocity: 0.5
-    property real touchpadSensitivity: (Config?.options.interactions.scrolling.touchpadSensitivity ?? 3.5)
-                                       * (Config?.options.interactions.scrolling.touchpadScrollFactor ?? 1.0)
-    property real bounceDamping: Config?.options.interactions.scrolling.bounceDamping ?? 0.3
+    property real flingFriction: Config?.options?.interactions?.scrolling?.flingFriction ?? 0.002
+    property real flingStopThreshold: Config?.options?.interactions?.scrolling?.flingStopThreshold ?? 0.01
+    property real flingMinVelocity: 0.15 // px/ms threshold to launch fling
+    property real touchpadSensitivity: (Config?.options?.interactions?.scrolling?.touchpadSensitivity ?? 3.5)
+                                       * _cfgTouchpadFactor
+    property real bounceDamping: Config?.options?.interactions?.scrolling?.bounceDamping ?? 0.3
 
     // === Mouse wheel physics ===
     property int wheelScrollAmount: Math.round(
-        (Config?.options.interactions.scrolling.wheelScrollAmount ?? 100)
-        * (Config?.options.interactions.scrolling.mouseScrollFactor ?? 1.0))
-    property int wheelDurationMin: Config?.options.interactions.scrolling.wheelDurationMin ?? 200
-    property int wheelDurationMax: Config?.options.interactions.scrolling.wheelDurationMax ?? 400
-    property int mouseScrollDeltaThreshold: Config?.options.interactions.scrolling.mouseScrollDeltaThreshold ?? 120
+        (Config?.options?.interactions?.scrolling?.wheelScrollAmount ?? 100)
+        * _cfgMouseFactor)
+    property int wheelDurationMin: Config?.options?.interactions?.scrolling?.wheelDurationMin ?? 180
+    property int wheelDurationMax: Config?.options?.interactions?.scrolling?.wheelDurationMax ?? 350
+    property int mouseScrollDeltaThreshold: Config?.options?.interactions?.scrolling?.mouseScrollDeltaThreshold ?? 120
 
     // === Internal state ===
     property real _velocity: 0
     property real _wheelTargetY: 0
     property real _lastEventTime: 0
+    property real _lastTouchpadTime: 0
     property var  _velocitySamples: []
 
     Timer {
@@ -53,16 +62,47 @@ Item {
         running: false
         onTriggered: {
             var dt = frameTime * 1000
-            if (dt <= 0) dt = 16.67
-            root._velocity *= Math.pow(1.0 - root.flingFriction, dt)
+            if (dt <= 0 || dt > 50) dt = 16.67
             var maxY = Math.max(0, root.flickable.contentHeight - root.flickable.height)
-            var newY = root.flickable.contentY - root._velocity * dt
-            if (maxY > 0) {
-                if (newY < 0) { newY = 0; root._velocity = -root._velocity * root.bounceDamping }
-                else if (newY > maxY) { newY = maxY; root._velocity = -root._velocity * root.bounceDamping }
-            } else { newY = 0 }
-            root.flickable.contentY = newY
-            if (Math.abs(root._velocity) < root.flingStopThreshold) { root._velocity = 0; running = false }
+            var y = root.flickable.contentY
+
+            if (y < 0) {
+                // Overscrolled at top: absorb velocity and spring back to 0
+                if (root._velocity < -0.05) {
+                    root._velocity *= 0.65
+                    y += root._velocity * dt
+                } else {
+                    root._velocity = 0
+                    y += (0 - y) * 0.25
+                }
+            } else if (y > maxY) {
+                // Overscrolled at bottom: absorb velocity and spring back to maxY
+                if (root._velocity > 0.05) {
+                    root._velocity *= 0.65
+                    y += root._velocity * dt
+                } else {
+                    root._velocity = 0
+                    y += (maxY - y) * 0.25
+                }
+            } else {
+                // Inside bounds: exponential velocity decay
+                root._velocity *= Math.pow(1.0 - root.flingFriction, dt)
+                y += root._velocity * dt
+            }
+
+            root.flickable.contentY = y
+
+            // Stopping condition: low velocity and at or within bounds
+            var nearZero = Math.abs(y) < 0.5
+            var nearMax = Math.abs(y - maxY) < 0.5
+            var lowVelocity = Math.abs(root._velocity) < root.flingStopThreshold
+
+            if (lowVelocity && (y >= 0 && y <= maxY || nearZero || nearMax)) {
+                if (nearZero) root.flickable.contentY = 0
+                else if (nearMax) root.flickable.contentY = maxY
+                root._velocity = 0
+                running = false
+            }
         }
     }
 
@@ -74,73 +114,134 @@ Item {
     }
 
     // =========================================================
-    // Public API: called by MouseArea.onWheel in ContentPage/other wrappers
-    //
-    // Device distinction:
-    //   Mouse wheel  → angleDelta.y is an exact non-zero multiple of 120
-    //   Touchpad     → angleDelta.y is NOT a multiple of 120 (high-res inertia)
-    //   Phase end    → angleDelta.y == 0  (Wayland scroll phase separator)
+    // Public API: called by WheelHandler or MouseArea onWheel
     // =========================================================
     function handleWheel(event) {
-        var dy = event.angleDelta.y
-        if (dy === 0) return
+        var dy = event.angleDelta ? event.angleDelta.y : 0
+        var dx = event.angleDelta ? event.angleDelta.x : 0
+        var px = (event.pixelDelta && event.pixelDelta.y !== undefined) ? event.pixelDelta.y : 0
+        if (dy === 0 && dx === 0 && px === 0) return
+
         var enabled = Config?.options?.interactions?.scrolling?.fasterTouchpadScroll
         if (enabled === false) return
-        var isMouseWheel = (Math.abs(dy) % 120 === 0)
-        console.log("[ISE] handleWheel dy=" + dy + " isMouseWheel=" + isMouseWheel + " flickable=" + root.flickable + " contentH=" + root.flickable.contentHeight + " h=" + root.flickable.height)
-        if (isMouseWheel) {
-            root._handleMouseWheel(event)
-        } else {
+
+        // Distinguish touchpad vs mouse wheel reliably:
+        // 1. Non-zero pixelDelta is exclusively emitted by touchpads on Linux/Wayland.
+        // 2. Qt.ScrollPhase (Begin/Update/End/Momentum) is exclusively emitted by touchpads.
+        // 3. angleDelta not an exact multiple of 120 indicates high-res continuous touchpad scroll.
+        // 4. Any event within 250ms of a previous touchpad event belongs to the same continuous gesture.
+        var now = Date.now()
+        var hasPixelDelta = (px !== 0) || (event.pixelDelta && event.pixelDelta.x !== 0)
+        var hasScrollPhase = (event.phase !== undefined && event.phase !== Qt.NoScrollPhase)
+        var isContinuousAngle = (dy !== 0 && Math.abs(dy) % 120 !== 0)
+        var inTouchpadGesture = (now - root._lastTouchpadTime < 250)
+
+        var isTouchpad = hasPixelDelta || hasScrollPhase || isContinuousAngle || inTouchpadGesture
+
+        if (isTouchpad) {
+            root._lastTouchpadTime = now
             root._handleTouchpad(event)
+        } else {
+            root._handleMouseWheel(event)
         }
         event.accepted = true
     }
 
     function _handleTouchpad(event) {
-        var dy = event.angleDelta.y
-        if (dy === 0) return
-        if (wheelAnim.running) { wheelAnim.stop(); root._wheelTargetY = root.flickable.contentY }
+        var dy = event.angleDelta ? event.angleDelta.y : 0
+        var px = (event.pixelDelta && event.pixelDelta.y !== undefined) ? event.pixelDelta.y : 0
+        if (dy === 0 && px === 0) return
+
+        if (wheelAnim.running) {
+            wheelAnim.stop()
+            root._wheelTargetY = root.flickable.contentY
+        }
         physicsLoop.running = false
-        // Prefer pixelDelta from compositor (exact pixels), fall back to angleDelta * multiplier
-        var px = event.pixelDelta.y
-        var deltaPx = (px !== 0) ? -px : -dy * root.touchpadSensitivity
+
+        // Phase handling
+        if (event.phase === Qt.ScrollBegin) {
+            root._velocitySamples = []
+            liftTimer.stop()
+            return
+        } else if (event.phase === Qt.ScrollEnd) {
+            liftTimer.stop()
+            root._computeAndStartFling()
+            return
+        }
+
+        // Calculate delta: prefer pixelDelta from compositor, fallback to angleDelta * 0.2
+        var rawDelta = (px !== 0) ? px : (dy * 0.2)
+        var deltaPx = -rawDelta * root.touchpadSensitivity
+
+        var maxY = Math.max(0, root.flickable.contentHeight - root.flickable.height)
+
+        // Overscroll resistance when dragging beyond bounds
+        if (root.flickable.contentY < 0 && deltaPx < 0) deltaPx *= 0.35
+        if (root.flickable.contentY > maxY && deltaPx > 0) deltaPx *= 0.35
+
         var now = Date.now()
         var dt = now - root._lastEventTime
         if (dt > 0 && dt < 150) {
             root._velocitySamples.push(deltaPx / dt)
-            if (root._velocitySamples.length > 6) root._velocitySamples.shift()
+            if (root._velocitySamples.length > 5) root._velocitySamples.shift()
         } else if (dt >= 150) {
             root._velocitySamples = []
         }
         root._lastEventTime = now
-        var maxY = Math.max(0, root.flickable.contentHeight - root.flickable.height)
-        var newY = Math.max(0, Math.min(root.flickable.contentY + deltaPx, maxY))
-        console.log("[ISE-TP] deltaPx=" + deltaPx.toFixed(0) + " contentY=" + root.flickable.contentY.toFixed(0) + " -> " + newY.toFixed(0) + " maxY=" + maxY.toFixed(0))
+
+        // Clamp extreme overscroll while swiping
+        var newY = root.flickable.contentY + deltaPx
+        if (newY < -80) newY = -80
+        else if (newY > maxY + 80) newY = maxY + 80
+
         root.flickable.contentY = newY
         liftTimer.restart()
     }
 
     function _computeAndStartFling() {
-        if (root._velocitySamples.length === 0) { root._velocity = 0; return }
+        var maxY = Math.max(0, root.flickable.contentHeight - root.flickable.height)
+        var outOfBounds = (root.flickable.contentY < 0 || root.flickable.contentY > maxY)
+
+        if (root._velocitySamples.length === 0) {
+            root._velocity = 0
+            if (outOfBounds) physicsLoop.running = true
+            return
+        }
+
         var total = 0, weightSum = 0
         for (var i = 0; i < root._velocitySamples.length; i++) {
-            var w = i + 1; total += root._velocitySamples[i] * w; weightSum += w
+            var w = i + 1
+            total += root._velocitySamples[i] * w
+            weightSum += w
         }
         root._velocity = total / weightSum
         root._velocitySamples = []
-        if (Math.abs(root._velocity) >= root.flingMinVelocity) { physicsLoop.running = true }
-        else { root._velocity = 0 }
+
+        if (Math.abs(root._velocity) >= root.flingMinVelocity || outOfBounds) {
+            physicsLoop.running = true
+        } else {
+            root._velocity = 0
+        }
     }
 
     function _handleMouseWheel(event) {
-        physicsLoop.running = false; liftTimer.stop(); root._velocity = 0; root._velocitySamples = []
-        var direction = event.angleDelta.y > 0 ? -1 : 1
+        physicsLoop.running = false
+        liftTimer.stop()
+        root._velocity = 0
+        root._velocitySamples = []
+
+        var dy = event.angleDelta ? event.angleDelta.y : 0
+        var direction = dy > 0 ? -1 : 1
         var maxY = Math.max(0, root.flickable.contentHeight - root.flickable.height)
         var base = wheelAnim.running ? root._wheelTargetY : root.flickable.contentY
         root._wheelTargetY = Math.max(0, Math.min(base + direction * root.wheelScrollAmount, maxY))
         var distance = Math.abs(root._wheelTargetY - root.flickable.contentY)
-        var duration = Math.max(root.wheelDurationMin, Math.min(root.wheelDurationMax, distance * 2))
-        wheelAnim.stop(); wheelAnim.from = root.flickable.contentY
-        wheelAnim.to = root._wheelTargetY; wheelAnim.duration = duration; wheelAnim.start()
+        var duration = Math.max(root.wheelDurationMin, Math.min(root.wheelDurationMax, distance * 1.5))
+
+        wheelAnim.stop()
+        wheelAnim.from = root.flickable.contentY
+        wheelAnim.to = root._wheelTargetY
+        wheelAnim.duration = duration
+        wheelAnim.start()
     }
 }

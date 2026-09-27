@@ -76,9 +76,8 @@ ListView {
         var eng = _engine
         var flick = root
         _parentHandler.wheel.connect(function(event) {
-            if (event.x >= flick.x && event.x < flick.x + flick.width &&
-                event.y >= flick.y && event.y < flick.y + flick.height) {
-                console.log("[SLV] wheel over listview: " + event.angleDelta.y)
+            var pt = flick.mapFromItem(parentItem, event.x, event.y)
+            if (pt.x >= 0 && pt.x <= flick.width && pt.y >= 0 && pt.y <= flick.height) {
                 eng.handleWheel(event)
             }
         })
