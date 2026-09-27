@@ -28,7 +28,10 @@ MaterialShape { // App icon
     shape: isUrgent ? urgentShapes[Math.floor(Math.random() * urgentShapes.length)] : MaterialShape.Shape.Circle
 
     color: isUrgent ? Appearance.colors.colPrimaryContainer : Appearance.colors.colSecondaryContainer
-    readonly property bool hasSystemIcon: root.appIcon != "" && Quickshell.iconPath(root.appIcon, "") !== ""
+    readonly property bool hasSystemIcon: {
+        if (!root.appIcon || root.appIcon === "") return false;
+        return Quickshell.iconPath(root.appIcon, true).length > 0;
+    }
 
     Loader {
         id: materialSymbolLoader
@@ -95,7 +98,7 @@ MaterialShape { // App icon
             }
             Loader {
                 id: notifImageAppIconLoader
-                active: root.appIcon != ""
+                active: root.hasSystemIcon
                 anchors.bottom: parent.bottom
                 anchors.right: parent.right
                 sourceComponent: IconImage {
