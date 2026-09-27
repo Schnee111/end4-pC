@@ -35,17 +35,53 @@ apply_kitty() {
     echo "Template file not found for Kitty theme. Skipping that."
     return
   fi
-  # Copy template
+  if [ ! -f "$STATE_DIR/user/generated/material_colors.scss" ]; then
+    return
+  fi
+
   mkdir -p "$STATE_DIR"/user/generated/terminal
-  cp "$SCRIPT_DIR/terminal/kitty-theme.conf" "$STATE_DIR"/user/generated/terminal/kitty-theme.conf
-  # Apply colors
-  for i in "${!colorlist[@]}"; do
-    sed -i "s/${colorlist[$i]} #/${colorvalues[$i]#\#}/g" "$STATE_DIR"/user/generated/terminal/kitty-theme.conf
-  done
+  local target_file="$STATE_DIR/user/generated/terminal/kitty-theme.conf"
+  local tmp_file="$target_file.tmp.$$"
+
+  python3 -c '
+import sys, os, re
+
+scss_path, tpl_path, tmp_path = sys.argv[1:4]
+colors = {}
+with open(scss_path) as f:
+    for line in f:
+        line = line.strip()
+        if ":" in line:
+            k, v = line.split(":", 1)
+            colors[k.strip()] = v.split(";")[0].strip().lstrip("#")
+
+with open(tpl_path) as f:
+    content = f.read()
+
+for k, v in colors.items():
+    content = content.replace(f"{k} #", v)
+
+# Strip invalid C++ style comments if present
+content = re.sub(r"\s*//.*", "", content)
+
+# Abort if unreplaced template variables remain
+if re.search(r"\$[a-zA-Z0-9_]+\s*#", content):
+    sys.exit(1)
+
+with open(tmp_path, "w") as f:
+    f.write(content)
+' "$STATE_DIR/user/generated/material_colors.scss" "$SCRIPT_DIR/terminal/kitty-theme.conf" "$tmp_file" 2>/dev/null
+
+  if [ -s "$tmp_file" ]; then
+    mv -f "$tmp_file" "$target_file"
+  else
+    rm -f "$tmp_file"
+    return 1
+  fi
 
   # Reload colors via socket if available to preserve user font zoom/scaling
   if command -v kitten &>/dev/null; then
-    kitten @ --to unix:@kitty set-colors --all --configured "$STATE_DIR"/user/generated/terminal/kitty-theme.conf 2>/dev/null || pkill -SIGUSR1 -x kitty 2>/dev/null || true
+    kitten @ --to unix:@kitty set-colors --all --configured "$target_file" 2>/dev/null || pkill -SIGUSR1 -x kitty 2>/dev/null || true
   else
     pkill -SIGUSR1 -x kitty 2>/dev/null || true
   fi
@@ -57,15 +93,44 @@ apply_anyterm() {
     echo "Template file not found for Terminal. Skipping that."
     return
   fi
-  # Copy template
-  mkdir -p "$STATE_DIR"/user/generated/terminal
-  cp "$SCRIPT_DIR/terminal/sequences.txt" "$STATE_DIR"/user/generated/terminal/sequences.txt
-  # Apply colors
-  for i in "${!colorlist[@]}"; do
-    sed -i "s/${colorlist[$i]} #/${colorvalues[$i]#\#}/g" "$STATE_DIR"/user/generated/terminal/sequences.txt
-  done
+  if [ ! -f "$STATE_DIR/user/generated/material_colors.scss" ]; then
+    return
+  fi
 
-  sed -i "s/\$alpha/$term_alpha/g" "$STATE_DIR"/user/generated/terminal/sequences.txt
+  mkdir -p "$STATE_DIR"/user/generated/terminal
+  local target_file="$STATE_DIR/user/generated/terminal/sequences.txt"
+  local tmp_file="$target_file.tmp.$$"
+
+  python3 -c '
+import sys, os
+
+scss_path, tpl_path, tmp_path, alpha = sys.argv[1:5]
+colors = {}
+with open(scss_path) as f:
+    for line in f:
+        line = line.strip()
+        if ":" in line:
+            k, v = line.split(":", 1)
+            colors[k.strip()] = v.split(";")[0].strip().lstrip("#")
+
+with open(tpl_path) as f:
+    content = f.read()
+
+for k, v in colors.items():
+    content = content.replace(f"{k} #", v)
+
+content = content.replace("$alpha", alpha)
+
+with open(tmp_path, "w") as f:
+    f.write(content)
+' "$STATE_DIR/user/generated/material_colors.scss" "$SCRIPT_DIR/terminal/sequences.txt" "$tmp_file" "$term_alpha" 2>/dev/null
+
+  if [ -s "$tmp_file" ]; then
+    mv -f "$tmp_file" "$target_file"
+  else
+    rm -f "$tmp_file"
+    return 1
+  fi
 
   # Note: Broadcasting raw escape sequences to all /dev/pts/* is disabled
   # because it corrupts libadwaita terminals (Ptyxis/Prompt) contrast and
