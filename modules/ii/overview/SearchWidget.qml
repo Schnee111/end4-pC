@@ -170,6 +170,19 @@ Item { // Wrapper
                 KeyNavigation.up: searchBar
                 highlightMoveDuration: 100
 
+                InertialScrollEngine {
+                    id: scrollEngine
+                    flickable: appResults
+                }
+
+                WheelHandler {
+                    target: null
+                    acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                    onWheel: event => {
+                        scrollEngine.handleWheel(event)
+                    }
+                }
+
                 onFocusChanged: {
                     if (focus)
                         appResults.currentIndex = 1;

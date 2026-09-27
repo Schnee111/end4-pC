@@ -205,6 +205,19 @@ Item {
             clip: true
             boundsBehavior: Flickable.StopAtBounds
 
+            InertialScrollEngine {
+                id: scrollEngine
+                flickable: grid
+            }
+
+            WheelHandler {
+                target: null
+                acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+                onWheel: event => {
+                    scrollEngine.handleWheel(event)
+                }
+            }
+
             model: wallpaperModel
 
             delegate: Item {

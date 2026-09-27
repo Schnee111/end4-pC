@@ -347,6 +347,19 @@ Item {
         boundsBehavior: Flickable.StopAtBounds
         ScrollBar.vertical: StyledScrollBar {}
 
+        InertialScrollEngine {
+            id: scrollEngine
+            flickable: grid
+        }
+
+        WheelHandler {
+            target: null
+            acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+            onWheel: event => {
+                scrollEngine.handleWheel(event)
+            }
+        }
+
         function getModelProp(idx, prop) {
             if (!grid.model || idx < 0 || idx >= grid.model.count) return prop === "fileIsDir" ? false : "";
             const item = grid.model.get(idx);
