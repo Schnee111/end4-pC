@@ -31,7 +31,7 @@ Singleton {
 		return null;
 	}
 
-	property MprisPlayer activePlayer: preferredPlayer ?? trackedPlayer ?? Mpris.players.values[0] ?? null;
+	property MprisPlayer activePlayer: preferredPlayer ?? (trackedPlayer?.isPlaying ? trackedPlayer : (root.players.find(p => p.isPlaying) ?? trackedPlayer ?? Mpris.players.values[0] ?? null));
 	signal trackChanged(reverse: bool);
 
 	property bool __reverse: false;
@@ -71,7 +71,7 @@ Singleton {
 			Component.onDestruction: {
 				if (root.trackedPlayer == null || !root.trackedPlayer.isPlaying) {
 					for (const player of Mpris.players.values) {
-						if (player.playbackState.isPlaying) {
+						if (player.isPlaying) {
 							root.trackedPlayer = player;
 							break;
 						}
@@ -84,7 +84,9 @@ Singleton {
 			}
 
 			function onPlaybackStateChanged() {
-				if (root.trackedPlayer !== modelData) root.trackedPlayer = modelData;
+				if (modelData.isPlaying || !root.trackedPlayer?.isPlaying) {
+					root.trackedPlayer = modelData;
+				}
 			}
 		}
 	}

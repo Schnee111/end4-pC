@@ -60,22 +60,49 @@ Item {
             let p1 = players[i];
             let group = [i];
 
-            // Find duplicates by trackTitle prefix
+            // Find duplicates by trackTitle and rough playback sync
             for (let j = i + 1; j < players.length; ++j) {
                 let p2 = players[j];
-                if (p1.trackTitle && p2.trackTitle && (p1.trackTitle.includes(p2.trackTitle) || p2.trackTitle.includes(p1.trackTitle)) || (p1.position - p2.position <= 2 && p1.length - p2.length <= 2)) {
+                const title1 = (p1.trackTitle ?? "").trim().toLowerCase();
+                const title2 = (p2.trackTitle ?? "").trim().toLowerCase();
+                const isTitleMatch = title1.length > 0 && title2.length > 0 && (title1.includes(title2) || title2.includes(title1));
+                const isLengthMatch = Math.abs(p1.length - p2.length) <= 5;
+                const isPositionMatch = Math.abs(p1.position - p2.position) <= 5;
+
+                if (isTitleMatch && isLengthMatch && isPositionMatch) {
                     group.push(j);
                 }
             }
 
-            // Pick the one with non-empty trackArtUrl, or fallback to the first
-            let chosenIdx = group.find(idx => players[idx]?.trackArtUrl && players[idx].trackArtUrl.length > 0);
-            if (chosenIdx === undefined)
+            // Pick the best player from the group:
+            // 1. Prefer player that is currently playing
+            // 2. Prefer player with valid non-empty track title
+            // 3. Prefer player with non-empty art URL
+            // 4. Fallback to first in group
+            let chosenIdx = group.find(idx => players[idx]?.isPlaying);
+            if (chosenIdx === undefined) {
+                chosenIdx = group.find(idx => (players[idx]?.trackTitle ?? "").trim().length > 0);
+            }
+            if (chosenIdx === undefined) {
+                chosenIdx = group.find(idx => players[idx]?.trackArtUrl && players[idx].trackArtUrl.length > 0);
+            }
+            if (chosenIdx === undefined) {
                 chosenIdx = group[0];
+            }
 
             filtered.push(players[chosenIdx]);
             group.forEach(idx => used.add(idx));
         }
+
+        // Sort so that currently playing players come first, then players with tracks, then idle
+        filtered.sort((a, b) => {
+            if (a.isPlaying && !b.isPlaying) return -1;
+            if (!a.isPlaying && b.isPlaying) return 1;
+            const aHasTitle = ((a.trackTitle ?? "").trim().length > 0) ? 1 : 0;
+            const bHasTitle = ((b.trackTitle ?? "").trim().length > 0) ? 1 : 0;
+            return bHasTitle - aHasTitle;
+        });
+
         return filtered;
     }
 
