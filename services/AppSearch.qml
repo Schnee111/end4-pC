@@ -58,6 +58,37 @@ Singleton {
         entry: a
     }))
 
+    // User patch: these desktop entries always rank above other matches sharing
+    // the keyword (keeps osu! (stable) above osu! (lazer) when searching "osu")
+    readonly property var pinnedApps: [
+        { "id": "osu-wine", "keyword": "osu" }
+    ]
+
+    function applyPinned(results: var): var {
+        const arr = results.slice();
+        for (let p = 0; p < root.pinnedApps.length; p++) {
+            const pin = root.pinnedApps[p];
+            let idx = -1;
+            for (let i = 0; i < arr.length; i++) {
+                if (arr[i].id === pin.id) { idx = i; break; }
+            }
+            if (idx < 0) continue;
+            // Find the first other result mentioning the keyword (e.g. osu! lazer)
+            let conflict = -1;
+            for (let i = 0; i < arr.length; i++) {
+                if (i !== idx && arr[i].name && arr[i].name.toLowerCase().indexOf(pin.keyword) !== -1) {
+                    conflict = i;
+                    break;
+                }
+            }
+            if (conflict >= 0 && conflict < idx) {
+                const item = arr.splice(idx, 1)[0];
+                arr.splice(conflict, 0, item);
+            }
+        }
+        return arr;
+    }
+
     function fuzzyQuery(search: string): var { // Idk why list<DesktopEntry> doesn't work
         if (root.sloppySearch) {
             const results = list.map(obj => ({
@@ -65,16 +96,16 @@ Singleton {
                 score: Levendist.computeScore(obj.name.toLowerCase(), search.toLowerCase())
             })).filter(item => item.score > root.scoreThreshold)
                 .sort((a, b) => b.score - a.score)
-            return results
-                .map(item => item.entry)
+            return root.applyPinned(results
+                .map(item => item.entry))
         }
 
-        return Fuzzy.go(search, preppedNames, {
+        return root.applyPinned(Fuzzy.go(search, preppedNames, {
             all: true,
             key: "name"
         }).map(r => {
             return r.obj.entry
-        });
+        }));
     }
 
     function iconExists(iconName) {
