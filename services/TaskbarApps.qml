@@ -43,11 +43,15 @@ Singleton {
         // Open windows
         for (const toplevel of ToplevelManager.toplevels.values) {
             if (ignoredRegexes.some(re => re.test(toplevel.appId))) continue;
-            if (!map.has(toplevel.appId.toLowerCase())) map.set(toplevel.appId.toLowerCase(), ({
+            let id = toplevel.appId.toLowerCase();
+            if (id.startsWith("kitty-") || id.startsWith("kitty_")) {
+                id = "kitty";
+            }
+            if (!map.has(id)) map.set(id, ({
                 pinned: false,
                 toplevels: []
             }));
-            map.get(toplevel.appId.toLowerCase()).toplevels.push(toplevel);
+            map.get(id).toplevels.push(toplevel);
         }
 
         var values = [];
