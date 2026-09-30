@@ -21,6 +21,7 @@ Singleton {
     }
 
     function applyColors(fileContent) {
+        if (!fileContent || !fileContent.trim()) return
         const json = JSON.parse(fileContent)
         for (const key in json) {
             if (json.hasOwnProperty(key)) {

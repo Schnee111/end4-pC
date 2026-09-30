@@ -43,10 +43,12 @@ Variants {
 
         property list<HyprlandWorkspace> workspacesForMonitor: Hyprland.workspaces.values.filter(workspace => workspace.monitor && workspace.monitor.name == monitor.name)
         property var activeWorkspaceWithFullscreen: workspacesForMonitor.filter(workspace => ((workspace.toplevels.values.filter(window => window.wayland?.fullscreen)[0] != undefined) && workspace.active))[0]
+        property var thisMonitorData: HyprlandData.monitors.find(m => m.name === monitor.name)
+        property bool monitorHasFullscreen: (activeWorkspaceWithFullscreen != undefined) || (HyprlandData.workspaceById[thisMonitorData?.activeWorkspace?.id]?.hasfullscreen ?? false)
         visible: true
 
         readonly property bool hiddenForFullscreen: !GlobalStates.screenLocked
-            && (activeWorkspaceWithFullscreen != undefined)
+            && monitorHasFullscreen
             && Config?.options.background.hideWhenFullscreen
 
         property HyprlandMonitor monitor: Hyprland.monitorFor(modelData)

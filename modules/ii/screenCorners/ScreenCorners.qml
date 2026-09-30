@@ -24,7 +24,7 @@ Scope {
         id: cornerPanelWindow
         property var brightnessMonitor: Brightness.getMonitorForScreen(screen)
         property bool fullscreen
-        visible: (Config.options.appearance.fakeScreenRounding === 1 || (Config.options.appearance.fakeScreenRounding === 2 && !fullscreen)) || Config.options.sidebar.cornerOpen.enable
+        visible: !fullscreen && ((Config.options.appearance.fakeScreenRounding === 1 || Config.options.appearance.fakeScreenRounding === 2) || Config.options.sidebar.cornerOpen.enable)
         property var corner
 
         exclusionMode: ExclusionMode.Ignore
@@ -144,10 +144,10 @@ Scope {
             // Hide when fullscreen
             property list<HyprlandWorkspace> workspacesForMonitor: Hyprland.workspaces.values.filter(workspace => workspace.monitor && workspace.monitor.name == monitor.name)
             property var activeWorkspaceWithFullscreen: workspacesForMonitor.filter(workspace => ((workspace.toplevels.values.filter(window => window.wayland?.fullscreen)[0] != undefined) && workspace.active))[0]
-            property bool fullscreen: activeWorkspaceWithFullscreen != undefined
+            property var thisMonitorData: HyprlandData.monitors.find(m => m.name === monitor.name)
+            property bool fullscreen: (activeWorkspaceWithFullscreen != undefined) || (HyprlandData.workspaceById[thisMonitorData?.activeWorkspace?.id]?.hasfullscreen ?? false)
             // A special workspace open on top of the fullscreen window should bring corners back,
             // same reasoning as the bar's layer fix: fullscreen only buries them when nothing else is above it.
-            property var thisMonitorData: HyprlandData.monitors.find(m => m.name === monitor.name)
             property bool specialOpen: (thisMonitorData?.specialWorkspace?.name ?? "") !== ""
 
             CornerPanelWindow {

@@ -15,9 +15,9 @@ Scope {
         id: root
         property var activeMonData: HyprlandData.monitors.find(m => m.name === (screen?.name ?? ""))
         property bool isFullscreenActive: {
-            if (activeMonData?.hasfullscreen) return true;
             const focusedId = activeMonData?.activeWorkspace?.id;
             if (focusedId) {
+                if (HyprlandData.workspaceById[focusedId]?.hasfullscreen) return true;
                 const clients = HyprlandData.hyprlandClientsForWorkspace(focusedId);
                 if (clients && clients.some(c => c.fullscreen > 0)) return true;
             }
