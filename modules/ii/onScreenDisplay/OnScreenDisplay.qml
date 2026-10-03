@@ -13,7 +13,9 @@ import Quickshell.Hyprland
 Scope {
     id: root
     property string protectionMessage: ""
-    property var focusedScreen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name)
+    property var focusedScreen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name && !s.name.startsWith("HEADLESS") && !s.name.startsWith("FALLBACK"))
+        ?? Quickshell.screens.find(s => !s.name.startsWith("HEADLESS") && !s.name.startsWith("FALLBACK"))
+        ?? null
 
     property string currentIndicator: "volume"
     onCurrentIndicatorChanged: GlobalStates.osdIndicatorType = currentIndicator

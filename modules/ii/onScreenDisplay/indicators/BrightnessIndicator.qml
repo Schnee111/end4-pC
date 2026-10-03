@@ -7,8 +7,8 @@ import qs.modules.ii.onScreenDisplay
 OsdValueIndicator {
     id: root
     property var focusedScreen: WM.compositor === "hyprland"
-            ? Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name)
-            : Quickshell.screens.find(s => s.name === WM.focusedMonitor?.name)
+            ? (Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name && !s.name.startsWith("HEADLESS") && !s.name.startsWith("FALLBACK")) ?? Quickshell.screens.find(s => !s.name.startsWith("HEADLESS") && !s.name.startsWith("FALLBACK")))
+            : (Quickshell.screens.find(s => s.name === WM.focusedMonitor?.name && !s.name.startsWith("HEADLESS") && !s.name.startsWith("FALLBACK")) ?? Quickshell.screens.find(s => !s.name.startsWith("HEADLESS") && !s.name.startsWith("FALLBACK")))
     property var brightnessMonitor: Brightness.getMonitorForScreen(focusedScreen)
 
     icon: Hyprsunset.temperatureActive ? "routine" : "light_mode"

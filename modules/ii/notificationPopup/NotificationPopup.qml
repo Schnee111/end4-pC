@@ -24,7 +24,9 @@ Scope {
             return false;
         }
         visible: (Notifications.popupList.length > 0) && !GlobalStates.screenLocked && !GlobalStates.dynamicIslandEnabled && !isFullscreenActive
-        screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? null
+        screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name && !s.name.startsWith("HEADLESS") && !s.name.startsWith("FALLBACK")) 
+            ?? Quickshell.screens.find(s => !s.name.startsWith("HEADLESS") && !s.name.startsWith("FALLBACK")) 
+            ?? null
 
         property string position: {
             const raw = Config.options.notifications.position ?? "top_right"

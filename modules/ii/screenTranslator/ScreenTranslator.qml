@@ -13,7 +13,9 @@ Scope {
         GlobalStates.screenTranslatorOpen = false
     }
 
-    readonly property var currentScreen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? null
+    readonly property var currentScreen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name && !s.name.startsWith("HEADLESS") && !s.name.startsWith("FALLBACK"))
+        ?? Quickshell.screens.find(s => !s.name.startsWith("HEADLESS") && !s.name.startsWith("FALLBACK"))
+        ?? null
     
     Loader {
         id: translatorLoader

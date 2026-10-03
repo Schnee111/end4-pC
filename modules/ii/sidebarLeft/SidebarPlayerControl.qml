@@ -38,7 +38,10 @@ Item {
     property bool shapeArt: Config.options.sidebar.media.shapeArt ?? false
     readonly property var artShapeOptions: ["Circle", "Square", "Pill", "Bun", "Cookie12Sided", "Clover4Leaf", "Heart", "Slanted", "Arch", "Arrow", "SemiCircle", "Oval", "Triangle", "Diamond", "ClamShell", "Pentagon", "Gem", "Sunny", "VerySunny", "Cookie4Sided", "Cookie6Sided", "Cookie7Sided", "Cookie9Sided", "Ghostish", "Clover8Leaf", "Burst", "SoftBurst", "Boom", "SoftBoom", "Flower", "Puffy", "PuffyDiamond"]
 
-    property string displayedArtFilePath: root.downloaded ? Qt.resolvedUrl(artFilePath) : ""
+    property string displayedArtFilePath: {
+        if (root.artUrl && root.artUrl.startsWith("file://")) return root.artUrl;
+        return root.downloaded ? Qt.resolvedUrl(artFilePath) : "";
+    }
 
     Timer {
         running: root.player?.playbackState == MprisPlaybackState.Playing
@@ -50,6 +53,11 @@ Item {
     onArtFilePathChanged: {
         if (!root.artUrl || root.artUrl.length == 0) {
             root.artDominantColor = Appearance.m3colors.m3secondaryContainer
+            root.downloaded = false
+            return
+        }
+        if (root.artUrl.startsWith("file://")) {
+            root.downloaded = true
             return
         }
         coverArtDownloader.targetFile = root.artUrl
@@ -62,8 +70,10 @@ Item {
         id: coverArtDownloader
         property string targetFile: root.artUrl
         property string artFilePath: root.artFilePath
-        command: ["bash", "-c", `[ -f ${artFilePath} ] || curl -sSL '${targetFile}' -o '${artFilePath}'`]
-        onExited: (exitCode, exitStatus) => { root.downloaded = true }
+        command: ["bash", "-c", `[ -f "${artFilePath}" ] || curl -4 -sSL "${targetFile}" -o "${artFilePath}"`]
+        onExited: (exitCode, exitStatus) => {
+            root.downloaded = (exitCode === 0);
+        }
     }
 
     ColorQuantizer {

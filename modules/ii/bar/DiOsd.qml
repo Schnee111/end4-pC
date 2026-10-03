@@ -18,8 +18,8 @@ RowLayout {
     spacing: 6
 
     readonly property var focusedScreen: WM.compositor === "hyprland"
-        ? Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name)
-        : Quickshell.screens.find(s => s.name === WM.focusedMonitor?.name)
+        ? (Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name && !s.name.startsWith("HEADLESS") && !s.name.startsWith("FALLBACK")) ?? Quickshell.screens.find(s => !s.name.startsWith("HEADLESS") && !s.name.startsWith("FALLBACK")))
+        : (Quickshell.screens.find(s => s.name === WM.focusedMonitor?.name && !s.name.startsWith("HEADLESS") && !s.name.startsWith("FALLBACK")) ?? Quickshell.screens.find(s => !s.name.startsWith("HEADLESS") && !s.name.startsWith("FALLBACK")))
     readonly property var brightnessMonitor: Brightness.getMonitorForScreen(focusedScreen)
 
     MaterialShapeWrappedMaterialSymbol {
