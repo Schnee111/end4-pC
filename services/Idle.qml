@@ -2,10 +2,11 @@ pragma Singleton
 import qs.modules.common
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import Quickshell.Wayland
 
 /**
- * A nice wrapper for date and time strings.
+ * Service to manage system idle inhibition.
  */
 Singleton {
     id: root
@@ -16,6 +17,14 @@ Singleton {
     Connections {
         target: Persistent
         function onReadyChanged() {
+            if (Persistent.ready) {
+                root.inhibit = Persistent.states.idle.inhibit;
+            }
+        }
+    }
+
+    Component.onCompleted: {
+        if (Persistent.ready) {
             root.inhibit = Persistent.states.idle.inhibit;
         }
     }
@@ -27,6 +36,12 @@ Singleton {
             root.inhibit = !root.inhibit;
         }
         Persistent.states.idle.inhibit = root.inhibit;
+    }
+
+    Process {
+        id: systemdInhibitor
+        command: ["systemd-inhibit", "--what=idle:sleep", "--who=Quickshell", "--why=Keep system awake", "sleep", "infinity"]
+        running: root.inhibit
     }
 
     IdleInhibitor {
