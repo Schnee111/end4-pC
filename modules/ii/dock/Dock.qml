@@ -152,7 +152,7 @@ Scope {
 
                             DragApps {
                                 id: dragSlots
-                                visible: dockRow.hasPinnedApps
+                                visible: dockRow.hasPinnedApps || dragSlots.buttonHovered || dragSlots.requestDockShow
                                 Layout.fillHeight: false
                                 Layout.topMargin: 2
                                 Layout.leftMargin: Config.options.dock.showPinButton ? 0 : -18
@@ -170,7 +170,7 @@ Scope {
                                 id: activeAppsArea
                                 Layout.fillHeight: true
                                 Layout.topMargin: 0
-                                property bool requestDockShow: false
+                                property bool requestDockShow: dragSlots.requestDockShow
 
                                 property var activeUnpinned: {
                                     return TaskbarApps.apps.filter(
@@ -211,17 +211,11 @@ Scope {
                                             appToplevel: modelData
                                             Layout.fillHeight: true
                                             Layout.topMargin: 2
-                                            appListRoot: appListBridge
+                                            appListRoot: dragSlots
                                             topInset:    dockRow.padding + 8
                                             bottomInset: dockRow.padding + 8
                                         }
                                     }
-                                }
-
-                                QtObject {
-                                    id: appListBridge
-                                    property Item lastHoveredButton: null
-                                    property bool buttonHovered: false
                                 }
                             }
 

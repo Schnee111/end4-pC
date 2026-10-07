@@ -43,19 +43,21 @@ DockButton {
 
     Loader {
         anchors.fill: parent
-        active: appToplevel.toplevels.length > 0
+        active: (appToplevel?.toplevels?.length ?? 0) > 0
         sourceComponent: MouseArea {
             id: mouseArea
             anchors.fill: parent
             hoverEnabled: true
             acceptedButtons: Qt.NoButton
             onEntered: {
-                appListRoot.lastHoveredButton = root
-                appListRoot.buttonHovered = true
-                lastFocused = appToplevel.toplevels.length - 1
+                if (appListRoot) {
+                    appListRoot.lastHoveredButton = root
+                    appListRoot.buttonHovered = true
+                }
+                lastFocused = (appToplevel?.toplevels?.length ?? 1) - 1
             }
             onExited: {
-                if (appListRoot.lastHoveredButton === root) {
+                if (appListRoot && appListRoot.lastHoveredButton === root) {
                     appListRoot.buttonHovered = false
                 }
             }

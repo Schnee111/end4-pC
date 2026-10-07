@@ -42,7 +42,8 @@ Item {
 
     function popupCenterXForButton(button) {
         if (!button || !root.QsWindow) return 0
-        return root.QsWindow.mapFromItem(button, button.width / 2, 0).x
+        const btnW = button.width > 0 ? button.width : (button.implicitWidth > 0 ? button.implicitWidth : root.btnSize)
+        return root.QsWindow.mapFromItem(button, btnW / 2, 0).x
     }
 
     function swapSlots(fromPos, toPos) {
@@ -156,7 +157,9 @@ Item {
                         root.lastHoveredButton = dockBtn
                         root.buttonHovered = true
                     } else {
-                        root.buttonHovered = false
+                        if (root.lastHoveredButton === dockBtn) {
+                            root.buttonHovered = false
+                        }
                     }
                 }
 
@@ -343,7 +346,7 @@ Item {
                             + root.windowControlsHeight
                             + Appearance.sizes.elevationMargin * 2
             hoverEnabled: true
-            x: previewPopup.cachedCenterX - width / 2
+            x: Math.max(5, Math.min(parent.width - width - 5, previewPopup.cachedCenterX - width / 2))
 
             StyledRectangularShadow {
                 target: popupBackground
