@@ -45,8 +45,10 @@ Scope {
     }
 
     function activeWorkspaceForMonitor(monitorName) {
-        const m = Hyprland.monitors.values.find(mm => mm.name === monitorName);
-        return m?.activeWorkspace ? { id: m.activeWorkspace.id } : null;
+        const m = HyprlandData.monitors.find(mm => mm.name === monitorName);
+        if (m?.activeWorkspace) return { id: m.activeWorkspace.id };
+        const hm = Hyprland.monitors.values.find(mm => mm.name === monitorName);
+        return hm?.activeWorkspace ? { id: hm.activeWorkspace.id } : (HyprlandData.activeWorkspace ? { id: HyprlandData.activeWorkspace.id } : null);
     }
 
     function biggestWindowForWorkspace(wsId) {

@@ -13,15 +13,19 @@ NestableObject {
 
     readonly property var hyprMonitor: WM.compositor === "hyprland" ? Hyprland.monitorFor(screen) : null
     readonly property var liveMonitorData: WM.compositor === "hyprland"
-        ? HyprlandData.monitors.find(m => m.id === hyprMonitor?.id)
+        ? (HyprlandData.monitors.find(m => m.name === root.monitorName) || HyprlandData.monitors.find(m => m.id === hyprMonitor?.id))
         : null
 
     readonly property Toplevel activeWindow: ToplevelManager.activeToplevel
     readonly property int shownCount: C.Config.options.bar.workspaces.shown
 
     readonly property int activeNumber: {
-        if (WM.compositor === "hyprland")
-            return hyprMonitor?.activeWorkspace?.id ?? 1
+        if (WM.compositor === "hyprland") {
+            return liveMonitorData?.activeWorkspace?.id
+                ?? hyprMonitor?.activeWorkspace?.id
+                ?? HyprlandData.activeWorkspace?.id
+                ?? 1
+        }
         const ws = WM.workspaces.find(w => w.output === root.monitorName && w.is_active)
         return ws?.idx ?? 1
     }
@@ -130,6 +134,15 @@ NestableObject {
         target: HyprlandData
         enabled: WM.compositor === "hyprland"
         function onWindowListChanged() {
+            root.updateWorkspaceOccupied()
+        }
+        function onActiveWorkspaceChanged() {
+            root.updateWorkspaceOccupied()
+        }
+        function onMonitorsChanged() {
+            root.updateWorkspaceOccupied()
+        }
+        function onWorkspacesChanged() {
             root.updateWorkspaceOccupied()
         }
     }
