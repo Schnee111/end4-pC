@@ -93,6 +93,8 @@ with open(tmp_path, "w") as f:
   else
     pkill -SIGUSR1 -x kitty 2>/dev/null || true
   fi
+
+  python3 "$HOME/.config/hypr/scripts/restore_kitty_fonts.py" >/dev/null 2>&1 &
 }
 
 apply_anyterm() {
