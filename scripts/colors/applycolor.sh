@@ -79,9 +79,17 @@ with open(tmp_path, "w") as f:
     return 1
   fi
 
-  # Reload colors via socket if available to preserve user font zoom/scaling
+  # Reload colors via socket for all running kitty instances to preserve user font zoom/scaling
   if command -v kitten &>/dev/null; then
-    kitten @ --to unix:@kitty set-colors --all --configured "$target_file" 2>/dev/null || pkill -SIGUSR1 -x kitty 2>/dev/null || true
+    local updated=false
+    for pid in $(pgrep -x kitty 2>/dev/null); do
+      if kitten @ --to "unix:@kitty-$pid" set-colors --all --configured "$target_file" 2>/dev/null; then
+        updated=true
+      fi
+    done
+    if [ "$updated" = false ]; then
+      kitten @ --to unix:@kitty set-colors --all --configured "$target_file" 2>/dev/null || pkill -SIGUSR1 -x kitty 2>/dev/null || true
+    fi
   else
     pkill -SIGUSR1 -x kitty 2>/dev/null || true
   fi
