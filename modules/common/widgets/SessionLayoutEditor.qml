@@ -13,7 +13,7 @@ ColumnLayout {
     id: root
     Layout.fillWidth: true
     width: parent.width
-    spacing: 8
+    spacing: 12
 
     property var layoutEntries: []
     property bool ready: false
@@ -106,7 +106,7 @@ ColumnLayout {
     // Top Action Toolbar
     RowLayout {
         Layout.fillWidth: true
-        spacing: 8
+        spacing: 10
 
         GroupedList {
             Layout.fillWidth: true
@@ -128,9 +128,9 @@ ColumnLayout {
             Layout.preferredHeight: 38
             implicitWidth: captureRow.implicitWidth + 24
             buttonRadius: Appearance.rounding.small
-            colBackground: ColorUtils.transparentize(Appearance.colors.colSecondaryContainer, 0.4)
-            colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colSecondaryContainer, 0.2)
-            colRipple: ColorUtils.transparentize(Appearance.colors.colSecondaryContainer, 0.1)
+            colBackground: ColorUtils.transparentize(Appearance.colors.colSecondaryContainer, 0.35)
+            colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colSecondaryContainer, 0.15)
+            colRipple: ColorUtils.transparentize(Appearance.colors.colSecondaryContainer, 0.05)
             enabled: !captureProc.running
             onClicked: captureProc.running = true
 
@@ -158,9 +158,9 @@ ColumnLayout {
             Layout.preferredHeight: 38
             implicitWidth: runRow.implicitWidth + 24
             buttonRadius: Appearance.rounding.small
-            colBackground: ColorUtils.transparentize(Appearance.colors.colPrimaryContainer, 0.4)
-            colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colPrimaryContainer, 0.2)
-            colRipple: ColorUtils.transparentize(Appearance.colors.colPrimaryContainer, 0.1)
+            colBackground: ColorUtils.transparentize(Appearance.colors.colPrimaryContainer, 0.35)
+            colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colPrimaryContainer, 0.15)
+            colRipple: ColorUtils.transparentize(Appearance.colors.colPrimaryContainer, 0.05)
             enabled: !testRunProc.running
             onClicked: testRunProc.running = true
 
@@ -223,24 +223,23 @@ ColumnLayout {
             required property int index
 
             Layout.fillWidth: true
-            implicitHeight: cardContent.implicitHeight + 20
-            radius: Appearance.rounding.small
+            implicitHeight: cardContent.implicitHeight + 28
+            radius: Appearance.rounding.normal
             color: Appearance.colors.colLayer1
             border.width: 1
             border.color: Appearance.colors.colLayer0Border
+            clip: true
 
             ColumnLayout {
                 id: cardContent
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.top: parent.top
-                anchors.margins: 10
-                spacing: 8
+                anchors.fill: parent
+                anchors.margins: 14
+                spacing: 12
 
-                // Header Row: Workspace Badge, App Name, Up/Down, Delete
+                // Header Row: Workspace Badge, App Name (editable), Up/Down, Delete
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 8
+                    spacing: 10
 
                     MaterialPill {
                         bgColor: Appearance.colors.colPrimaryContainer
@@ -252,96 +251,105 @@ ColumnLayout {
                         }
                     }
 
-                    StyledText {
+                    StyledTextInput {
+                        id: nameInput
+                        Layout.fillWidth: true
                         text: entryCard.modelData.name || (entryCard.modelData.match || "App")
                         font.pixelSize: Appearance.font.pixelSize.normal
                         font.weight: Font.Medium
                         color: Appearance.colors.colOnLayer1
-                    }
-
-                    Item { Layout.fillWidth: true }
-
-                    // Move Up Button
-                    RippleButton {
-                        Layout.preferredWidth: 32
-                        Layout.preferredHeight: 32
-                        enabled: entryCard.index > 0
-                        opacity: enabled ? 1 : 0.3
-                        buttonRadius: 16
-                        colBackground: ColorUtils.transparentize(Appearance.colors.colLayer2, 0.5)
-                        onClicked: root.moveEntry(entryCard.index, -1)
-                        MaterialSymbol {
-                            anchors.centerIn: parent
-                            text: "arrow_upward"
-                            iconSize: Appearance.font.pixelSize.smaller
-                            color: Appearance.colors.colOnLayer1
+                        onEditingFinished: {
+                            if (text !== entryCard.modelData.name) {
+                                root.updateEntry(entryCard.index, "name", text)
+                            }
                         }
                     }
 
-                    // Move Down Button
-                    RippleButton {
-                        Layout.preferredWidth: 32
-                        Layout.preferredHeight: 32
-                        enabled: entryCard.index < root.layoutEntries.length - 1
-                        opacity: enabled ? 1 : 0.3
-                        buttonRadius: 16
-                        colBackground: ColorUtils.transparentize(Appearance.colors.colLayer2, 0.5)
-                        onClicked: root.moveEntry(entryCard.index, 1)
-                        MaterialSymbol {
-                            anchors.centerIn: parent
-                            text: "arrow_downward"
-                            iconSize: Appearance.font.pixelSize.smaller
-                            color: Appearance.colors.colOnLayer1
-                        }
-                    }
+                    // Move Up, Move Down, Delete
+                    RowLayout {
+                        spacing: 4
 
-                    // Delete Button
-                    RippleButton {
-                        Layout.preferredWidth: 32
-                        Layout.preferredHeight: 32
-                        buttonRadius: 16
-                        colBackground: ColorUtils.transparentize(Appearance.colors.colError, 0.85)
-                        colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colError, 0.6)
-                        colRipple: ColorUtils.transparentize(Appearance.colors.colError, 0.5)
-                        onClicked: root.removeEntry(entryCard.index)
-                        MaterialSymbol {
-                            anchors.centerIn: parent
-                            text: "delete"
-                            iconSize: Appearance.font.pixelSize.smaller
-                            color: Appearance.colors.colError
+                        RippleButton {
+                            implicitWidth: 32
+                            implicitHeight: 32
+                            enabled: entryCard.index > 0
+                            opacity: enabled ? 1 : 0.3
+                            buttonRadius: Appearance.rounding.small
+                            colBackground: ColorUtils.transparentize(Appearance.colors.colLayer2, 0.6)
+                            onClicked: root.moveEntry(entryCard.index, -1)
+                            MaterialSymbol {
+                                anchors.centerIn: parent
+                                text: "arrow_upward"
+                                iconSize: Appearance.font.pixelSize.smaller
+                                color: Appearance.colors.colOnLayer1
+                            }
+                        }
+
+                        RippleButton {
+                            implicitWidth: 32
+                            implicitHeight: 32
+                            enabled: entryCard.index < root.layoutEntries.length - 1
+                            opacity: enabled ? 1 : 0.3
+                            buttonRadius: Appearance.rounding.small
+                            colBackground: ColorUtils.transparentize(Appearance.colors.colLayer2, 0.6)
+                            onClicked: root.moveEntry(entryCard.index, 1)
+                            MaterialSymbol {
+                                anchors.centerIn: parent
+                                text: "arrow_downward"
+                                iconSize: Appearance.font.pixelSize.smaller
+                                color: Appearance.colors.colOnLayer1
+                            }
+                        }
+
+                        RippleButton {
+                            implicitWidth: 32
+                            implicitHeight: 32
+                            buttonRadius: Appearance.rounding.small
+                            colBackground: ColorUtils.transparentize(Appearance.colors.colError, 0.85)
+                            colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colError, 0.6)
+                            colRipple: ColorUtils.transparentize(Appearance.colors.colError, 0.5)
+                            onClicked: root.removeEntry(entryCard.index)
+                            MaterialSymbol {
+                                anchors.centerIn: parent
+                                text: "delete"
+                                iconSize: Appearance.font.pixelSize.smaller
+                                color: Appearance.colors.colError
+                            }
                         }
                     }
+                }
+
+                // Subtle Divider
+                Rectangle {
+                    Layout.fillWidth: true
+                    height: 1
+                    color: ColorUtils.transparentize(Appearance.colors.colLayer0Border, 0.5)
                 }
 
                 // Row 1: Command and Match Pattern
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 8
+                    spacing: 12
 
                     ColumnLayout {
                         Layout.fillWidth: true
                         Layout.preferredWidth: 3
-                        spacing: 2
+                        spacing: 4
                         StyledText {
-                            text: Translation.tr("Command")
+                            text: Translation.tr("Command (CLI)")
                             font.pixelSize: Appearance.font.pixelSize.smaller
-                            color: Appearance.colors.colSubtext
+                            font.weight: Font.Medium
+                            color: Appearance.colors.colOnLayer1
                         }
-                        MaterialTextArea {
+                        MaterialTextField {
                             id: cmdInput
                             Layout.fillWidth: true
                             placeholderText: Translation.tr("e.g. kitty --class kitty-main")
                             text: entryCard.modelData.cmd ?? ""
-                            wrapMode: TextEdit.Wrap
-                            onTextChanged: {
+                            onEditingFinished: {
                                 if (text !== entryCard.modelData.cmd) {
-                                    cmdTimer.restart()
+                                    root.updateEntry(entryCard.index, "cmd", text)
                                 }
-                            }
-                            Timer {
-                                id: cmdTimer
-                                interval: 600
-                                onTriggered: root.updateEntry(entryCard.index, "cmd", cmdInput.text)
                             }
                         }
                     }
@@ -349,26 +357,22 @@ ColumnLayout {
                     ColumnLayout {
                         Layout.fillWidth: true
                         Layout.preferredWidth: 2
-                        spacing: 2
+                        spacing: 4
                         StyledText {
                             text: Translation.tr("Window Class Matcher")
                             font.pixelSize: Appearance.font.pixelSize.smaller
-                            color: Appearance.colors.colSubtext
+                            font.weight: Font.Medium
+                            color: Appearance.colors.colOnLayer1
                         }
-                        MaterialTextArea {
+                        MaterialTextField {
                             id: matchInput
                             Layout.fillWidth: true
                             placeholderText: Translation.tr("e.g. kitty-main")
                             text: entryCard.modelData.match ?? ""
-                            onTextChanged: {
+                            onEditingFinished: {
                                 if (text !== entryCard.modelData.match) {
-                                    matchTimer.restart()
+                                    root.updateEntry(entryCard.index, "match", text)
                                 }
-                            }
-                            Timer {
-                                id: matchTimer
-                                interval: 600
-                                onTriggered: root.updateEntry(entryCard.index, "match", matchInput.text)
                             }
                         }
                     }
@@ -377,15 +381,16 @@ ColumnLayout {
                 // Row 2: Workspace, Split Position, Target Parent, Width, Height
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 8
+                    spacing: 12
 
                     // Workspace
                     ColumnLayout {
-                        spacing: 2
+                        spacing: 4
                         StyledText {
                             text: Translation.tr("Workspace")
                             font.pixelSize: Appearance.font.pixelSize.smaller
-                            color: Appearance.colors.colSubtext
+                            font.weight: Font.Medium
+                            color: Appearance.colors.colOnLayer1
                         }
                         ConfigSpinBox {
                             width: 105
@@ -400,94 +405,102 @@ ColumnLayout {
                         }
                     }
 
-                    // Split Direction
+                    // Split Direction (Segmented Buttons)
                     ColumnLayout {
-                        spacing: 2
+                        spacing: 4
                         StyledText {
-                            text: Translation.tr("Split")
+                            text: Translation.tr("Split Direction")
                             font.pixelSize: Appearance.font.pixelSize.smaller
-                            color: Appearance.colors.colSubtext
+                            font.weight: Font.Medium
+                            color: Appearance.colors.colOnLayer1
                         }
-                        ConfigSelectionArray {
-                            currentValue: entryCard.modelData.split || "root"
-                            onSelected: newValue => {
-                                root.updateEntry(entryCard.index, "split", newValue)
+                        RowLayout {
+                            spacing: 2
+                            SelectionGroupButton {
+                                buttonText: Translation.tr("Root")
+                                buttonIcon: "crop_square"
+                                toggled: (entryCard.modelData.split || "root") === "root"
+                                leftmost: true
+                                onClicked: root.updateEntry(entryCard.index, "split", "root")
                             }
-                            options: [
-                                { displayName: Translation.tr("Root"),  icon: "crop_square",     value: "root" },
-                                { displayName: Translation.tr("Right"), icon: "arrow_forward",   value: "right" },
-                                { displayName: Translation.tr("Down"),  icon: "arrow_downward",  value: "down" },
-                            ]
+                            SelectionGroupButton {
+                                buttonText: Translation.tr("Right")
+                                buttonIcon: "arrow_forward"
+                                toggled: (entryCard.modelData.split || "root") === "right"
+                                onClicked: root.updateEntry(entryCard.index, "split", "right")
+                            }
+                            SelectionGroupButton {
+                                buttonText: Translation.tr("Down")
+                                buttonIcon: "arrow_downward"
+                                toggled: (entryCard.modelData.split || "root") === "down"
+                                rightmost: true
+                                onClicked: root.updateEntry(entryCard.index, "split", "down")
+                            }
                         }
                     }
 
                     // Target Parent (only visible if split is right or down)
                     ColumnLayout {
                         Layout.fillWidth: true
-                        visible: (entryCard.modelData.split ?? "root") !== "root"
-                        spacing: 2
+                        visible: (entryCard.modelData.split || "root") !== "root"
+                        spacing: 4
                         StyledText {
-                            text: Translation.tr("Target Parent Class")
+                            text: Translation.tr("Parent Class")
                             font.pixelSize: Appearance.font.pixelSize.smaller
-                            color: Appearance.colors.colSubtext
+                            font.weight: Font.Medium
+                            color: Appearance.colors.colOnLayer1
                         }
-                        MaterialTextArea {
+                        MaterialTextField {
                             id: targetInput
                             Layout.fillWidth: true
-                            placeholderText: Translation.tr("Parent class")
+                            placeholderText: Translation.tr("e.g. kitty-fastfetch")
                             text: entryCard.modelData.target ?? ""
-                            onTextChanged: {
+                            onEditingFinished: {
                                 if (text !== entryCard.modelData.target) {
-                                    targetTimer.restart()
-                                }
-                            }
-                            Timer {
-                                id: targetTimer
-                                interval: 600
-                                onTriggered: root.updateEntry(entryCard.index, "target", targetInput.text)
-                            }
-                        }
-                    }
-
-                    // Width (px)
-                    ColumnLayout {
-                        spacing: 2
-                        StyledText {
-                            text: Translation.tr("Width (px)")
-                            font.pixelSize: Appearance.font.pixelSize.smaller
-                            color: Appearance.colors.colSubtext
-                        }
-                        ConfigSpinBox {
-                            width: 120
-                            from: 0
-                            to: 3840
-                            stepSize: 10
-                            value: entryCard.modelData.width ?? 0
-                            onValueChanged: {
-                                if (value !== entryCard.modelData.width) {
-                                    root.updateEntry(entryCard.index, "width", value)
+                                    root.updateEntry(entryCard.index, "target", text)
                                 }
                             }
                         }
                     }
 
-                    // Height (px)
+                    // Target Size (W × H px)
                     ColumnLayout {
-                        spacing: 2
+                        spacing: 4
                         StyledText {
-                            text: Translation.tr("Height (px)")
+                            text: Translation.tr("Target Size (W × H px)")
                             font.pixelSize: Appearance.font.pixelSize.smaller
-                            color: Appearance.colors.colSubtext
+                            font.weight: Font.Medium
+                            color: Appearance.colors.colOnLayer1
                         }
-                        ConfigSpinBox {
-                            width: 120
-                            from: 0
-                            to: 2160
-                            stepSize: 10
-                            value: entryCard.modelData.height ?? 0
-                            onValueChanged: {
-                                if (value !== entryCard.modelData.height) {
-                                    root.updateEntry(entryCard.index, "height", value)
+                        RowLayout {
+                            spacing: 6
+                            MaterialTextField {
+                                implicitWidth: 80
+                                placeholderText: Translation.tr("Auto")
+                                text: (entryCard.modelData.width ?? 0) > 0 ? `${entryCard.modelData.width}` : ""
+                                validator: IntValidator { bottom: 0; top: 7680 }
+                                onEditingFinished: {
+                                    const val = parseInt(text) || 0
+                                    if (val !== (entryCard.modelData.width ?? 0)) {
+                                        root.updateEntry(entryCard.index, "width", val)
+                                    }
+                                }
+                            }
+                            StyledText {
+                                text: "×"
+                                font.pixelSize: Appearance.font.pixelSize.normal
+                                color: Appearance.colors.colSubtext
+                            }
+                            MaterialTextField {
+                                implicitWidth: 80
+                                placeholderText: Translation.tr("Auto")
+                                text: (entryCard.modelData.height ?? 0) > 0 ? `${entryCard.modelData.height}` : ""
+                                validator: IntValidator { bottom: 0; top: 7680 }
+                                onEditingFinished: {
+                                    const val = parseInt(text) || 0
+                                    if (val !== (entryCard.modelData.height ?? 0)) {
+                                        root.updateEntry(entryCard.index, "height", val)
+                                    }
                                 }
                             }
                         }
