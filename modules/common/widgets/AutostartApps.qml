@@ -46,6 +46,52 @@ ColumnLayout {
         Config.options.hyprland.autostartApps.apps = list
     }
 
+    ContentSubsection {
+        title: Translation.tr("Session Workspace Windows")
+        tooltip: Translation.tr("Deterministic window tiling and startup layout script (autostart.sh)")
+
+        RowLayout {
+            Layout.fillWidth: true
+            GroupedList {
+                Layout.fillWidth: true
+                ConfigSwitch {
+                    buttonIcon: "desktop_windows"
+                    text: Translation.tr("Restore window layout on boot")
+                    checked: Config.options.hyprland.sessionAutostart ?? false
+                    onCheckedChanged: {
+                        if (checked === (Config.options.hyprland.sessionAutostart ?? false)) return
+                        Config.options.hyprland.sessionAutostart = checked
+                        Quickshell.execDetached(["bash", "-c", `chmod ${checked ? "+x" : "-x"} ~/.config/hypr/scripts/autostart.sh`])
+                    }
+                }
+            }
+
+            RippleButton {
+                Layout.preferredWidth: 36
+                Layout.preferredHeight: 36
+                buttonRadius: implicitWidth / 2
+                colBackground: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.85)
+                colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.6)
+                colRipple: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.5)
+                onClicked: {
+                    Quickshell.execDetached(["bash", "-c", "rm -f /tmp/hypr-autostart-*.lock && ~/.config/hypr/scripts/autostart.sh"])
+                }
+                contentItem: MaterialSymbol {
+                    anchors.centerIn: parent
+                    horizontalAlignment: Text.AlignHCenter
+                    text: "motion_play"
+                    iconSize: Appearance.font.pixelSize.normal
+                    color: Appearance.colors.colPrimary
+                }
+            }
+        }
+    }
+
+    ContentSubsection {
+        title: Translation.tr("Custom App Commands")
+        Layout.topMargin: 8
+    }
+
     RowLayout {
         Layout.fillWidth: true
         GroupedList {

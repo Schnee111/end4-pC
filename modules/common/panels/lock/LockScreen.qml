@@ -47,6 +47,7 @@ Scope {
 
     function runPostUnlockAutostart() {
         if (root.autostartExecuted) return;
+        if (!Config.options?.hyprland?.sessionAutostart) return;
         root.autostartExecuted = true;
         Quickshell.execDetached(["bash", "-c", "test -x ~/.config/hypr/scripts/autostart.sh && ~/.config/hypr/scripts/autostart.sh"]);
     }

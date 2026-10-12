@@ -167,6 +167,7 @@ Singleton {
                     property bool enable: false
                     property list<var> apps: []
                 }
+                property bool sessionAutostart: false
                 property JsonObject decoration: JsonObject {
                     property int rounding: 22
                     property real activeOpacity: 1.0

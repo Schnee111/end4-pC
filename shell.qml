@@ -37,6 +37,9 @@ ShellRoot {
                 Config.options.hyprland.autostartApps.apps.length > 0) {
                 autostartProc.running = true
             }
+
+            const sessionAutostart = Config.options.hyprland.sessionAutostart ?? false
+            Quickshell.execDetached(["bash", "-c", `chmod ${sessionAutostart ? "+x" : "-x"} ~/.config/hypr/scripts/autostart.sh`])
         }
     }
 
