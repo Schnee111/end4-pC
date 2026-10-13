@@ -79,12 +79,21 @@ ColumnLayout {
             try {
                 const txt = layoutFileView.text()
                 if (txt && txt.trim().length > 0) {
-                    root.layoutEntries = JSON.parse(txt)
-                    root.ready = true
+                    const parsed = JSON.parse(txt)
+                    root.layoutEntries = Array.isArray(parsed) ? parsed : []
+                } else {
+                    root.layoutEntries = []
                 }
             } catch (e) {
                 console.warn("[SessionLayoutEditor] Error parsing layout JSON:", e)
+                root.layoutEntries = []
             }
+            root.ready = true
+        }
+        onLoadFailed: (error) => {
+            console.warn("[SessionLayoutEditor] Failed to load layout file:", error)
+            root.layoutEntries = []
+            root.ready = true
         }
     }
 
@@ -112,7 +121,7 @@ ColumnLayout {
             Layout.fillWidth: true
             ConfigSwitch {
                 buttonIcon: "desktop_windows"
-                text: Translation.tr("Restore window layout on boot")
+                text: Translation.tr("Restore layout on boot")
                 checked: Config.options.hyprland.sessionAutostart ?? false
                 onCheckedChanged: {
                     if (checked === (Config.options.hyprland.sessionAutostart ?? false)) return
