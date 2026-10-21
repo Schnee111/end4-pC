@@ -99,7 +99,7 @@ ColumnLayout {
 
     Process {
         id: captureProc
-        command: ["python3", "/home/schnee/.config/hypr/scripts/layout_engine.py", "--capture"]
+        command: ["python3", Quickshell.env("HOME") + "/.config/hypr/scripts/layout_engine.py", "--capture"]
         onRunningChanged: {
             if (!running) {
                 root.reload()
@@ -109,7 +109,7 @@ ColumnLayout {
 
     Process {
         id: testRunProc
-        command: ["bash", "-c", "rm -f /tmp/hypr-autostart-*.lock && python3 /home/schnee/.config/hypr/scripts/layout_engine.py --run"]
+        command: ["bash", "-c", "rm -f /tmp/hypr-autostart-*.lock && python3 \"$HOME/.config/hypr/scripts/layout_engine.py\" --run"]
     }
 
     // Top Action Toolbar
