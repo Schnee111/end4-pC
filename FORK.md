@@ -40,8 +40,8 @@ Conflict policy used so far:
 | MPRIS player choice (`services/MprisController.qml`) | Keep the playing player first, on top of upstream's `manualPlayer` |
 | `MaterialSymbol.qml` font | Keep the "Material Symbols Rounded" fallback |
 
-After merging, reload the shell and read `qs -c end4-pC log` for `is not a type`,
-`unavailable` and `TypeError` before opening the PR. Then bump `END4PC_REV` in the dotfiles.
+After merging, run `tests/check-syntax.sh`, reload the shell and read `qs -c end4-pC log`
+for `is not a type`, `unavailable` and `TypeError` before opening the PR. Then bump `END4PC_REV` in the dotfiles.
 
 ## What differs from upstream
 
@@ -58,6 +58,7 @@ Status of the upstream PRs is as of this writing.
 | Dock | `modules/common/widgets/DragApps.qml`, `modules/ii/dock/Dock.qml`, `DockActiveApps.qml`, `services/TaskbarApps.qml` | Hover preview for unpinned apps, preview clamped to the screen, `kitty-*` windows grouped | Hover preview: pctrade/end4-pC#232; the rest fork-only |
 | Hyprland state, fullscreen and output filtering | `modules/common/models/WorkspaceModel.qml`, `services/HyprlandBackend.qml`, `HyprlandData.qml`, `HyprlandConfig.qml`, `modules/ii/background/Background.qml`, `modules/ii/bar/DiOsd.qml`, `SystemIcons.qml`, `modules/ii/onScreenDisplay/*`, `modules/ii/screenTranslator/ScreenTranslator.qml` | Read workspace and fullscreen state from live Hyprland data; ignore the `HEADLESS-*` / `FALLBACK-*` outputs created while the display sleeps | Fork-only (depends on the headless output the dotfiles create) |
 | Thumbnails | `modules/common/widgets/ThumbnailImage.qml` | Fall back to the source image when a thumbnail fails | Concurrency and quoting fix: pctrade/end4-pC#240 |
+| CI | `.github/workflows/check.yml`, `tests/check-syntax.sh` | Parse every QML/JS, shell and Python file and run the icon theme manager tests on each PR | Fork-only (upstream has no CI) |
 | Misc | `services/Idle.qml` (`systemd-inhibit` for keep-awake), `services/AppSearch.qml` (`search.pinnedApps` in `Config.qml`, empty by default; the osu pin lives in the dotfiles' `config.json`), `modules/common/widgets/MaterialSymbol.qml` (font fallback) | Personal preferences | Fork-only |
 
 ## Host integration

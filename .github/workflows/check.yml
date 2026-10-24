@@ -1,0 +1,27 @@
+name: check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    # Fedora ships the same qmllint (Qt 6.11) the shell is run with.
+    container: fedora:44
+    steps:
+      - name: Install tools
+        run: dnf install -y --setopt=install_weak_deps=False git jq python3 qt6-qtdeclarative-devel
+
+      - uses: actions/checkout@v4
+
+      - name: Mark the checkout as safe
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Syntax
+        run: tests/check-syntax.sh
+
+      - name: Icon theme manager tests
+        run: python3 -m unittest discover -s tests/icon_theme_manager -p 'test_*.py'
