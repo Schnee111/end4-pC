@@ -298,7 +298,7 @@ Scope {
 
                             DragApps {
                                 id: dragSlots
-                                visible: dockRow.hasPinnedApps
+                                visible: dockRow.hasPinnedApps || dragSlots.buttonHovered || dragSlots.requestDockShow
                                 Layout.topMargin: DockStyle.mTop(DockStyle.pinnedInnerMargin, 0)
                                 Layout.leftMargin: DockStyle.mLeft(DockStyle.pinnedInnerMargin, 0)
                                 contextMenu: dockContextMenu
@@ -314,6 +314,7 @@ Scope {
                             DockActiveApps {
                                 id: activeApps
                                 contextMenu: dockContextMenu
+                                appListRoot: dragSlots
                             }
 
                             DockSeparator {
