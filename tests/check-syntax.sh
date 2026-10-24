@@ -19,8 +19,12 @@ report=$(mktemp)
 trap 'rm -f "$report"' EXIT
 
 # QML and JS. qmllint exits non-zero on any warning, so read its JSON instead.
-git ls-files -z '*.qml' '*.js' '*.mjs' | xargs -0 "$qmllint" --json "$report" >/dev/null 2>&1
-python3 - "$report" <<'EOF' || failed=1
+# One invocation on purpose: every run rewrites the report, so splitting the
+# list (as xargs may) would drop the earlier batches' results.
+mapfile -d '' qml_files < <(git ls-files -z '*.qml' '*.js' '*.mjs')
+if [ "${#qml_files[@]}" -gt 0 ]; then
+    "$qmllint" --json "$report" "${qml_files[@]}" >/dev/null 2>&1
+    python3 - "$report" <<'EOF' || failed=1
 import json, sys
 errors = 0
 for f in json.load(open(sys.argv[1]))["files"]:
@@ -30,6 +34,7 @@ for f in json.load(open(sys.argv[1]))["files"]:
             print(f'{f["filename"]}:{w.get("line", 0)}:{w.get("column", 0)}: {w["message"]}')
 sys.exit(1 if errors else 0)
 EOF
+fi
 
 # Shell
 while IFS= read -r -d '' f; do
