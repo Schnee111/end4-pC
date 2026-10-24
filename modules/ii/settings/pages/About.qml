@@ -14,14 +14,7 @@ ContentPage {
     bottomContentPadding: 35
     property bool isMinimal: Config.options.settings.style === "minimal"
 
-    function runSystemUpdate() {
-        Quickshell.execDetached([
-            "kitty", "--hold",
-            "fish", "-i", "-l", "-c",
-            "yay -Syu --combinedupgrade=false"
-        ])
-        Qt.callLater(() => GlobalStates.settingsOpen = false)
-    }
+    function runSystemUpdate() { DotsUpdater.runSystemUpdate() }
 
     function runUpdateDots() {
         Quickshell.execDetached(["notify-send", "Update Dots", "Disabled to preserve custom configuration.", "-a", "Settings"])
@@ -54,8 +47,7 @@ ContentPage {
 
                 IconImage {
                     anchors.centerIn: parent
-                    implicitWidth: 72
-                    implicitHeight: 72
+                    implicitSize: 72
                     source: Quickshell.iconPath(SystemInfo.logo)
                 }
             }

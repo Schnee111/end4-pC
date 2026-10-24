@@ -186,7 +186,7 @@ Item {
         anchors.fill: parent
         visible: !root.missingKey
 
-        GridView {
+        StyledGridView {
             id: grid
             anchors {
                 top: parent.top
@@ -204,19 +204,6 @@ Item {
             acceptedButtons: Qt.NoButton
             clip: true
             boundsBehavior: Flickable.StopAtBounds
-
-            InertialScrollEngine {
-                id: scrollEngine
-                flickable: grid
-            }
-
-            WheelHandler {
-                target: null
-                acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
-                onWheel: event => {
-                    scrollEngine.handleWheel(event)
-                }
-            }
 
             model: wallpaperModel
 
