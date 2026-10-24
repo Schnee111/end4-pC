@@ -51,6 +51,8 @@ ApplicationWindow {
         id: conflictGroup
         required property list<string> programs
         required property string description
+        property list<string> detectCommand: ["pidof", ...conflictGroup.programs]
+        property list<string> killCommand: ["killall", ...conflictGroup.programs]
         visible: false
         onVisibleChanged: {
             conflictCount += visible ? 1 : -1
@@ -60,7 +62,7 @@ ApplicationWindow {
 
         Process {
             running: true
-            command: ["pidof", ...conflictGroup.programs]
+            command: conflictGroup.detectCommand
             onExited: (exitCode, exitStatus) => {
                 if (exitCode === 0) {
                     conflictGroup.visible = true
@@ -89,7 +91,7 @@ ApplicationWindow {
                     text: Translation.tr("Always")
                 }
                 onClicked: {
-                    Quickshell.execDetached(["killall", ...conflictGroup.programs])
+                    Quickshell.execDetached(conflictGroup.killCommand)
                     conflictGroup.alwaysSelected()
                     conflictGroup.visible = false
                 }
@@ -100,7 +102,7 @@ ApplicationWindow {
                     text: Translation.tr("Yes")
                 }
                 onClicked: {
-                    Quickshell.execDetached(["killall", ...conflictGroup.programs])
+                    Quickshell.execDetached(conflictGroup.killCommand)
                     conflictGroup.visible = false
                 }
             }
@@ -178,6 +180,9 @@ ApplicationWindow {
                     Layout.alignment: Qt.AlignHCenter
                     Layout.fillHeight: false
                     programs: ["kded6"]
+                    // Same check and kill as services/ConflictKiller.qml
+                    detectCommand: ["bash", `${Directories.scriptPath}/kded6-holds-tray-watcher.sh`]
+                    killCommand: ["killall", "-KILL", "kded6"]
                     description: Translation.tr("Conflicts with the shell's system tray implementation")
                     onAlwaysSelected: Config.options.conflictKiller.autoKillTrays = true
                 }

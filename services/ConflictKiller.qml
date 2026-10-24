@@ -24,7 +24,9 @@ Singleton {
 
     Process {
         id: checkConflictsProc
-        command: ["bash", "-c", `echo "$(pidof kded6);$(pidof mako dunst)"`]
+        // kded6 only conflicts while it holds the tray watcher name
+        command: ["bash", "-c", 'bash "$1" && printf kded6; printf ";%s" "$(pidof mako dunst)"',
+            "_", `${Directories.scriptPath}/kded6-holds-tray-watcher.sh`]
         stdout: StdioCollector {
             onStreamFinished: {
                 const output = this.text;
@@ -33,7 +35,9 @@ Singleton {
                 var openDialog = false;
                 if (conflictingTrays) {
                     if (!Config.options.conflictKiller.autoKillTrays) openDialog = true;
-                    else Quickshell.execDetached(["killall", "kded6"])
+                    // SIGKILL: on SIGTERM kded6 crashes while shutting down and
+                    // KCrash restarts it, which takes the watcher name back first
+                    else Quickshell.execDetached(["killall", "-KILL", "kded6"])
                 }
                 if (conflictingNotifications) {
                     if (!Config.options.conflictKiller.autoKillNotificationDaemons) openDialog = true;
