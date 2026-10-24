@@ -58,16 +58,16 @@ Singleton {
         entry: a
     }))
 
-    // User patch: these desktop entries always rank above other matches sharing
-    // the keyword (keeps osu! (stable) above osu! (lazer) when searching "osu")
-    readonly property var pinnedApps: [
-        { "id": "osu-wine", "keyword": "osu" }
-    ]
+    // Desktop entries listed in search.pinnedApps rank above other matches whose
+    // name contains the same keyword (e.g. osu! (stable) above osu! (lazer))
+    readonly property var pinnedApps: Config.options.search.pinnedApps ?? []
 
     function applyPinned(results: var): var {
         const arr = results.slice();
         for (let p = 0; p < root.pinnedApps.length; p++) {
             const pin = root.pinnedApps[p];
+            const keyword = (pin.keyword ?? "").toLowerCase();
+            if (!pin.id || !keyword) continue;
             let idx = -1;
             for (let i = 0; i < arr.length; i++) {
                 if (arr[i].id === pin.id) { idx = i; break; }
@@ -76,7 +76,7 @@ Singleton {
             // Find the first other result mentioning the keyword (e.g. osu! lazer)
             let conflict = -1;
             for (let i = 0; i < arr.length; i++) {
-                if (i !== idx && arr[i].name && arr[i].name.toLowerCase().indexOf(pin.keyword) !== -1) {
+                if (i !== idx && arr[i].name && arr[i].name.toLowerCase().indexOf(keyword) !== -1) {
                     conflict = i;
                     break;
                 }
