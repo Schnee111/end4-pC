@@ -13,7 +13,7 @@ jobs:
     container: fedora:44
     steps:
       - name: Install tools
-        run: dnf install -y --setopt=install_weak_deps=False git python3 qt6-qtdeclarative-devel
+        run: dnf install -y --setopt=install_weak_deps=False git jq python3 qt6-qtdeclarative-devel
 
       - uses: actions/checkout@v4
 
