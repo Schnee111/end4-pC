@@ -50,7 +50,7 @@ StyledImage {
             const maxSize = Images.thumbnailSizes[root.thumbnailSizeName];
             const thumbPath = FileUtils.trimFileProtocol(root.thumbnailPath);
             return ["bash", "-c",
-                `[ -f '${thumbPath}' ] && exit 0 || { magick '${root.sourcePath}' -resize ${maxSize}x${maxSize} '${thumbPath}' && exit 1; exit 2; }`
+                `[ -f '${thumbPath}' ] && exit 0 || { tmp='${thumbPath}.$$.tmp.png'; trap 'rm -f "\${tmp}"' EXIT; magick '${root.sourcePath}' -resize ${maxSize}x${maxSize} "\${tmp}" && mv "\${tmp}" '${thumbPath}' && exit 1; exit 2; }`
             ]
         }
         onExited: (exitCode, exitStatus) => {
