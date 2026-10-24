@@ -39,18 +39,23 @@ Singleton {
         nameFilters: ["*.json"]
     }
 
+    // Presets saved by the ii shell store paths under the home directory as $HOME
+    function expandHome(path) {
+        return (path ?? "").replace(/\$HOME(?![A-Za-z0-9_])/g, Quickshell.env("HOME"))
+    }
+
     function previewImage(data) {
         const background = data?.background
         const raw = background?.wallpaperPath ?? ""
-        if (/\.(mp4|webm|mkv|avi|mov)$/i.test(raw)) return background?.thumbnailPath ?? ""
+        if (/\.(mp4|webm|mkv|avi|mov)$/i.test(raw)) return root.expandHome(background?.thumbnailPath)
         if (background?.collage?.enable) {
             try {
                 let node = JSON.parse(background.collage.tree)
                 while (node.t !== "leaf") node = node.a
-                if (node.img) return node.img
+                if (node.img) return root.expandHome(node.img)
             } catch (e) {}
         }
-        return raw
+        return root.expandHome(raw)
     }
 
     function refresh() {
