@@ -250,9 +250,13 @@ ColumnLayout {
                     Layout.fillWidth: true
                     spacing: 10
 
-                    MaterialPill {
-                        bgColor: Appearance.colors.colPrimaryContainer
+                    Pill {
+                        color: Appearance.colors.colPrimaryContainer
+                        implicitWidth: wsLabel.implicitWidth + 20
+                        implicitHeight: 32
                         StyledText {
+                            id: wsLabel
+                            anchors.centerIn: parent
                             text: `WS ${entryCard.modelData.workspace ?? 1}`
                             font.pixelSize: Appearance.font.pixelSize.smaller
                             font.weight: Font.Bold

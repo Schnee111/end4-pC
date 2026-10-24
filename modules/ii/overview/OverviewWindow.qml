@@ -12,6 +12,8 @@ import Quickshell.Wayland
 Item { // Window
     id: root
     property var toplevel
+    property var windowAddresses: HyprlandData.addresses
+    property var windowByAddress: HyprlandData.windowByAddress
     property var windowData
     property var monitorData
     property var scale
@@ -47,9 +49,8 @@ Item { // Window
         const wsId = windowData.workspace?.id;
         if (!wsId) return 0;
         let count = 0;
-        const addrs = HyprlandData.addresses ?? [];
-        for (const addr of addrs) {
-            const w = HyprlandData.windowByAddress?.[addr];
+        for (const addr of root.windowAddresses) {
+            const w = root.windowByAddress[addr];
             if (w && w.workspace?.id === wsId && !w.floating && !w.fullscreen) count++;
         }
         return count;
@@ -77,7 +78,7 @@ Item { // Window
     property real iconToWindowRatio: centerIcons ? 0.35 : 0.15
     property real xwaylandIndicatorToIconRatio: 0.35
     property real iconToWindowRatioCompact: 0.6
-    property string iconPath: Quickshell.iconPath(AppSearch.guessIcon(windowData?.class), "image-missing")
+    property string iconPath: SystemAppearance.iconPath(AppSearch.guessIcon(windowData?.class), "image-missing")
     property bool compactMode: Appearance.font.pixelSize.smaller * 4 > targetWindowHeight || Appearance.font.pixelSize.smaller * 4 > targetWindowWidth
 
     property bool indicateXWayland: windowData?.xwayland ?? false
