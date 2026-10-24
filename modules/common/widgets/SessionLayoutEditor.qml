@@ -126,7 +126,6 @@ ColumnLayout {
                 onCheckedChanged: {
                     if (checked === (Config.options.hyprland.sessionAutostart ?? false)) return
                     Config.options.hyprland.sessionAutostart = checked
-                    Quickshell.execDetached(["bash", "-c", `chmod ${checked ? "+x" : "-x"} ~/.config/hypr/scripts/autostart.sh`])
                 }
             }
         }

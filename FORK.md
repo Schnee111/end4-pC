@@ -49,7 +49,7 @@ Status of the upstream PRs is as of this writing.
 
 | Area | Files | Why | Upstream |
 |---|---|---|---|
-| Session workspace layout and autostart | `modules/common/widgets/SessionLayoutEditor.qml`, `AutostartApps.qml`, `modules/common/panels/lock/LockScreen.qml`, `shell.qml`, `modules/common/Config.qml` (`hyprland.sessionAutostart`) | Deterministic window placement and autostart after unlock; needs the dotfiles | Fork-only |
+| Session workspace layout and autostart | `modules/common/widgets/SessionLayoutEditor.qml`, `AutostartApps.qml`, `modules/common/panels/lock/LockScreen.qml`, `modules/common/Config.qml` (`hyprland.sessionAutostart`) | Deterministic window placement and autostart after unlock; needs the dotfiles | Fork-only |
 | Update Dots disabled | `services/DotsUpdater.qml`, `modules/ii/settings/pages/About.qml` | See the conflict policy | Fork-only |
 | Left sidebar disabled | `panelFamilies/IllogicalImpulseFamily.qml`, `modules/ii/screenCorners/ScreenCorners.qml` | Not used | Fork-only |
 | Terminal and theme application | `scripts/colors/applycolor.sh`, `scripts/colors/switchwall.sh`, `scripts/colors/generate_colors_material.py`, `scripts/colors/terminal/kitty-theme.conf`, `services/MaterialThemeLoader.qml`, `GlobalStates.qml`, `modules/common/models/quickToggles/DarkModeToggle.qml` | Atomic kitty theme file, no escape sequences broadcast to every `/dev/pts/*`, readable `term8`, ignore an empty colors file, `toggleLightDark` shortcut, hooks into the dotfiles | Kitty zoom part: pctrade/end4-pC#239; the rest fork-only |
@@ -69,9 +69,8 @@ by, the dotfiles (`rices/end4/` in that repository).
 
 | Where | Calls | Guarded? |
 |---|---|---|
-| `LockScreen.qml` | `~/.config/hypr/scripts/autostart.sh`, once per session after unlock, only if `hyprland.sessionAutostart` | yes (`test -x`) |
-| `shell.qml` | `chmod +x/-x ~/.config/hypr/scripts/autostart.sh` to match `hyprland.sessionAutostart` | no |
-| `SessionLayoutEditor.qml` | reads and writes `~/.config/hypr/custom/session_layout.json`; runs `~/.config/hypr/scripts/layout_engine.py --capture` and `--run`; same `chmod` as above | no |
+| `LockScreen.qml` | `bash ~/.config/hypr/scripts/autostart.sh`, once per session after unlock, only if `hyprland.sessionAutostart` | yes (`test -f`) |
+| `SessionLayoutEditor.qml` | reads and writes `~/.config/hypr/custom/session_layout.json`; runs `~/.config/hypr/scripts/layout_engine.py --capture` and `--run` | no |
 | `scripts/colors/applycolor.sh` | `~/.config/hypr/scripts/restore_kitty_fonts.py`, in the background, output discarded; puts `~/.local/bin` on `PATH` | no |
 | `scripts/colors/switchwall.sh` | `~/.config/hypr/scripts/apply_adaptive_glass.sh <wallpaper>`, in the background; puts `~/.local/bin` on `PATH` | no |
 | `modules/common/Config.qml` | default `volumeMixer` runs `~/.config/hypr/hyprland/scripts/launch_first_available.sh` | no |
