@@ -34,6 +34,11 @@ BLACKLIST_FILTER='del(._presetMeta)
   | del(.sidebar.booru, .wallpaperSelector.userPath)
   | walk(if type == "object" then with_entries(select(.key | test("^(.*api[-_]?key|secret|password|token|username|e-?mail)$"; "i") | not)) else . end)'
 
+# Presets saved by the ii shell, which shares this presets folder, store paths
+# under the home directory as a literal $HOME. Expand it before reading them.
+# shellcheck disable=SC2016 # $HOME and $ENV are for jq, not the shell
+EXPAND_HOME_FILTER='walk(if type == "string" then gsub("\\$HOME(?![A-Za-z0-9_])"; $ENV.HOME) else . end)'
+
 SHARE_FILTER='with_entries(select(.key as $k | ["appearance","background","bar","calendar","crosshair","dock","interactions","launcher","light","lock","media","notifications","osd","osk","overlay","overview","panelFamily","profile","regionSelector","resources","settings","sidebar","tray","wallpaperSelector","windows","hyprland"] | index($k)))
   | if (.hyprland | type) == "object" then .hyprland |= with_entries(select(.key as $k | ["decoration","gaps","animations","general"] | index($k))) else . end'
 
@@ -170,7 +175,7 @@ case "$action" in
         fi
         # Filter preset input before merge so blacklisted keys never overwrite local config
         tmp=$(mktemp)
-        jq "$BLACKLIST_FILTER" "$preset_file" > "$tmp"
+        jq "$EXPAND_HOME_FILTER | $BLACKLIST_FILTER" "$preset_file" > "$tmp"
         jq -s '.[0] * .[1] | del(._presetMeta)' "$CONFIG_FILE" "$tmp" | config_json_replace "$CONFIG_FILE"
         rm -f "$tmp"
         "$SWITCHWALL" --noswitch
@@ -198,7 +203,7 @@ case "$action" in
         trap 'rm -rf "$tmpdir"' EXIT
         # Use filtered preset for export
         filtered="$tmpdir/${name}.json"
-        jq "$BLACKLIST_FILTER | $SHARE_FILTER" "$preset_file" > "$filtered"
+        jq "$EXPAND_HOME_FILTER | $BLACKLIST_FILTER | $SHARE_FILTER" "$preset_file" > "$filtered"
         # Build meta.json + collect all image assets like online presets (ahri/meta.json)
         collect_asset() {
             local src="$1"; local key="$2"
