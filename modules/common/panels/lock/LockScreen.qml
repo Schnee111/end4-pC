@@ -49,7 +49,7 @@ Scope {
         if (root.autostartExecuted) return;
         if (!Config.options?.hyprland?.sessionAutostart) return;
         root.autostartExecuted = true;
-        Quickshell.execDetached(["bash", "-c", "test -x ~/.config/hypr/scripts/autostart.sh && ~/.config/hypr/scripts/autostart.sh"]);
+        Quickshell.execDetached(["bash", "-c", "test -f ~/.config/hypr/scripts/autostart.sh && bash ~/.config/hypr/scripts/autostart.sh"]);
     }
 
     // This stores all the information shared between the lock surfaces on each screen.
